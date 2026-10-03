@@ -1,0 +1,100 @@
+/**
+ * Shapes of the data repo's files, as far as the editor reads them. The JSON
+ * schemas in the data repo's `schemas/` are the definition; these types only
+ * describe the fields the app touches, and every type allows the rest.
+ */
+
+export type Tier = 'core' | 'practice' | 'stretch';
+export type Kind = 'instruction' | 'practice' | 'discussion' | 'review';
+
+export interface Section {
+	label?: string;
+	section: string;
+	duration_minutes: number;
+	tier?: Tier;
+	kind?: Kind;
+}
+
+export interface CurriculumLink {
+	framework: string;
+	id: string;
+	coverage: string;
+	mode: string;
+	note?: string;
+}
+
+export interface Differentiation {
+	support?: string;
+	extension?: string;
+	eald?: string;
+	response_modes?: string;
+	adhd?: string;
+}
+
+export interface Resource {
+	name: string;
+	url?: string;
+	canvas?: string;
+	file?: string;
+	notes?: string;
+}
+
+export interface Feedback {
+	issue: string;
+	change?: string;
+	offering?: string;
+}
+
+export interface Lesson {
+	title: string;
+	description: string;
+	summary?: string;
+	duration_minutes: number;
+	sections: Section[];
+	learning_intentions: string[];
+	success_criteria: string[];
+	curriculum_links: CurriculumLink[];
+	assessment?: { formative?: string; evidence?: string[] };
+	differentiation?: Differentiation;
+	resources?: Resource[];
+	feedback?: Feedback[];
+	materials?: unknown;
+	[key: string]: unknown;
+}
+
+export interface RegistryEntry {
+	id: string;
+	framework: string;
+	phase: string;
+	text: string;
+	owned_by?: string;
+	[key: string]: unknown;
+}
+
+export interface Unit {
+	unit_title: string;
+	description?: string;
+	syllabus_registry?: RegistryEntry[];
+	lessons?: string[];
+	[key: string]: unknown;
+}
+
+export interface OfferingUnit {
+	unit: string;
+	term?: string;
+	lessons?: string[];
+	duration_weeks?: number;
+	notes?: string;
+	[key: string]: unknown;
+}
+
+export interface Offering {
+	id: string;
+	year: number;
+	year_group?: string;
+	class_label?: string;
+	mode?: string;
+	subject: string;
+	units: OfferingUnit[];
+	[key: string]: unknown;
+}

@@ -1,0 +1,75 @@
+{
+  "title": "Sorting socks",
+  "description": "Students sort a pile of socks and name the rule they used.",
+  "duration_minutes": 30,
+  "summary": "Introduces sorting by an attribute — colour, then size.",
+  "sections": [
+    {
+      "label": "Warm-up: odd sock out",
+      "section": "Show four socks; students say which one does not belong and why.",
+      "duration_minutes": 5,
+      "kind": "discussion"
+    },
+    {
+      "section": "Students sort the class pile by colour, then by size.",
+      "duration_minutes": 20,
+      "kind": "practice",
+      "tier": "core"
+    },
+    {
+      "label": "Stretch: two rules at once",
+      "section": "Sort by colour and size together.",
+      "duration_minutes": 5,
+      "kind": "practice",
+      "tier": "stretch"
+    }
+  ],
+  "learning_intentions": [
+    "Understand that a sort needs a rule"
+  ],
+  "success_criteria": [
+    "I can sort socks by colour",
+    "I can name the rule I used ≥ once"
+  ],
+  "curriculum_links": [
+    {
+      "framework": "NESA",
+      "id": "SK-C01",
+      "coverage": "partial",
+      "mode": "introduced",
+      "note": "Colour only."
+    },
+    {
+      "framework": "NESA",
+      "id": "SK-C02",
+      "coverage": "full",
+      "mode": "introduced"
+    }
+  ],
+  "assessment": {
+    "formative": "Watch each pair's sort.",
+    "evidence": []
+  },
+  "differentiation": {
+    "support": "Give a pre-sorted example.",
+    "eald": "Colour word cards."
+  },
+  "resources": [
+    {
+      "name": "Sock pile",
+      "notes": "Bring forty socks."
+    },
+    {
+      "name": "Sorting cheat sheet",
+      "notes": "One page.",
+      "canvas": "cheat_sheet"
+    }
+  ],
+  "materials": {
+    "content": null,
+    "workbook": {},
+    "deck": {},
+    "handout": {},
+    "files": []
+  }
+}

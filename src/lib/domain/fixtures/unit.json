@@ -1,0 +1,8 @@
+{
+  "unit_title": "Sorting things",
+  "syllabus_registry": [
+    { "id": "SK-C01", "framework": "NESA", "phase": "Exploring", "text": "Sort objects by one attribute" },
+    { "id": "SK-C02", "framework": "NESA", "phase": "Exploring", "text": "Name a sorting rule" }
+  ],
+  "lessons": ["lessons/01_socks.json", "lessons/02_shoes.json", "lessons/03_hats.json"]
+}

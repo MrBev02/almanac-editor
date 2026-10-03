@@ -1,0 +1,10 @@
+{
+  "id": "2030-y7-class1",
+  "year": 2030,
+  "subject": "subjects/sorting",
+  "units": [
+    { "unit": "units/sorting_things", "term": "Term 1", "lessons": ["lessons/03_hats.json", "lessons/01_socks.json"] },
+    { "unit": "units/sorting_things", "term": "Term 2" },
+    { "unit": "units/other_unit", "term": "Term 3" }
+  ]
+}
