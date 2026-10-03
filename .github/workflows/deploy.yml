@@ -36,10 +36,14 @@ jobs:
           # The repo's Pages sub-path. Set to '' once the app has its own domain.
           BASE_PATH: /${{ github.event.repository.name }}
       - uses: actions/upload-pages-artifact@v3
+        if: vars.PAGES_ENABLED == 'true'
         with:
           path: build
 
+  # Off until the repo variable PAGES_ENABLED is 'true'. Pages stays off while
+  # the account's other Pages sites share this origin (see CLAUDE.md).
   deploy:
+    if: vars.PAGES_ENABLED == 'true'
     needs: build
     runs-on: ubuntu-latest
     environment:
