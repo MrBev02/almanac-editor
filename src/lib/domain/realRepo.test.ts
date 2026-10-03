@@ -26,7 +26,9 @@ function walk(dir: string): string[] {
 }
 
 describe.skipIf(!root)('real data repo', () => {
-	const repo = root ?? '';
+	// skipIf skips the tests, but vitest still runs this body to collect them.
+	if (!root) return;
+	const repo = root;
 	const files = walk(joinFs(repo, 'subjects'))
 		.concat(walk(joinFs(repo, 'offerings')))
 		.filter((f) => f.endsWith('.json'))
