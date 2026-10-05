@@ -10,7 +10,15 @@
 	import { subjectOf } from '#lib/domain/layout.ts';
 	import { join } from '#lib/domain/paths.ts';
 	import type { Offering } from '#lib/domain/types.ts';
-	import { className, houseMap, houseOf, humanise, titleCase, type House } from '#lib/house.ts';
+	import {
+		className,
+		houseMap,
+		houseOf,
+		humanise,
+		termParts,
+		titleCase,
+		type House
+	} from '#lib/house.ts';
 	import { links } from '#lib/links.ts';
 	import { session } from '#lib/session.svelte.ts';
 
@@ -200,8 +208,8 @@
 														? 'page'
 														: undefined}
 												>
-													{#if entry.term}<span class="term"
-															>{entry.term.replace('Term ', 'T')}</span
+													{#if entry.term}<span class="term" title={entry.term}
+															>{termParts(entry.term).join(' + ')}</span
 														>{/if}
 													<span>{unitTitle(dir)}</span>
 												</a>
@@ -448,6 +456,8 @@
 		font-size: 11px;
 		font-weight: 800;
 		min-width: 22px;
+		max-width: 56px;
+		line-height: 1.25;
 		color: var(--rail-muted);
 	}
 

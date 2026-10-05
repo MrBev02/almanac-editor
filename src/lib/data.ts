@@ -9,6 +9,7 @@ import type { Schema } from '@cfworker/json-schema';
 import { contentPath, offeringPaths, schemaPaths, unitDirs } from './domain/layout.ts';
 import { basename, join } from './domain/paths.ts';
 import { withColour } from './domain/offeringEdit.ts';
+import { byNumber } from './house.ts';
 import type { Loaded } from './domain/repo.ts';
 import type { Store } from './domain/store.ts';
 import type { Lesson, Offering, Unit } from './domain/types.ts';
@@ -43,16 +44,16 @@ export class Data {
 	}
 
 	offerings(): Promise<[string, Offering][]> {
-		this.offeringsPromise ??= this.store
-			.paths()
-			.then((paths) =>
-				Promise.all(
-					offeringPaths(paths.keys()).map(
+		this.offeringsPromise ??= this.store.paths().then((paths) =>
+			Promise.all(
+				offeringPaths(paths.keys())
+					.sort(byNumber)
+					.map(
 						async (path) =>
 							[path, (await this.store.readJson<Offering>(path)).doc] as [string, Offering]
 					)
-				)
-			);
+			)
+		);
 		return this.offeringsPromise;
 	}
 

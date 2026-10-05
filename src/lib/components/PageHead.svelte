@@ -69,15 +69,9 @@
 	}
 
 	.inner {
-		max-width: 1180px;
+		max-width: var(--page-max);
 		margin-inline: auto;
 		padding: 22px clamp(16px, 4vw, 48px) 26px;
-	}
-
-	@media (min-width: 1700px) {
-		.inner {
-			max-width: 1440px;
-		}
 	}
 
 	.crumbs {
@@ -127,14 +121,14 @@
 		font-stretch: 75%;
 		line-height: 0.98;
 		letter-spacing: -0.02em;
-		max-width: 22ch;
+		max-width: 26ch;
 	}
 
 	.lede {
 		margin: 12px 0 0;
 		font-size: 16px;
 		line-height: 1.45;
-		max-width: 62ch;
+		max-width: var(--measure);
 		opacity: 0.9;
 	}
 

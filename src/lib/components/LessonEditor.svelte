@@ -495,7 +495,7 @@
 
 	.cols {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+		grid-template-columns: minmax(0, 1fr) minmax(260px, var(--margin-col));
 		gap: 40px;
 		align-items: start;
 	}
@@ -627,7 +627,7 @@
 
 	.dot {
 		display: grid;
-		grid-template-columns: 58px minmax(0, 1fr);
+		grid-template-columns: minmax(58px, max-content) minmax(0, 1fr);
 		gap: 4px 10px;
 	}
 
@@ -636,6 +636,7 @@
 		font-size: 13px;
 		color: var(--house-deep);
 		padding-top: 1px;
+		white-space: nowrap;
 	}
 
 	.dot-text {

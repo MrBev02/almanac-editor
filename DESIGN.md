@@ -41,6 +41,12 @@ colors:
   house-lagoon: '#0e7490'
   house-lagoon-soft: '#dcf0f5'
   house-lagoon-deep: '#0a5568'
+  house-tangerine: '#c2410c'
+  house-tangerine-soft: '#fde6d8'
+  house-tangerine-deep: '#8a2e07'
+  house-moss: '#4d7c0f'
+  house-moss-soft: '#e6f0d5'
+  house-moss-deep: '#365a0a'
   house-on: '#ffffff'
 typography:
   numeral:
@@ -215,7 +221,7 @@ components:
 
 **Creative North Star: "House Colours"**
 
-Every class wears its house colour, and the colour is the navigation. A class's rail band, the page header and the lesson lanes all take the same flat colour, so the screen always says whose lesson you are in. It is a school-sports-carnival world: chalk ground, ink type, six flat house fields that own whole regions, and a run sheet drawn as a lane strip with a finish line. It refuses the neutral grey sidebar workspace with one blue accent.
+Every class wears its house colour, and the colour is the navigation. A class's rail band, the page header and the lesson lanes all take the same flat colour, so the screen always says whose lesson you are in. It is a school-sports-carnival world: chalk ground, ink type, eight flat house fields that own whole regions, and a run sheet drawn as a lane strip with a finish line. It refuses the neutral grey sidebar workspace with one blue accent.
 
 Density is that of a working tool used between classes: a dark rail on the left, a house-coloured header band with the title at display size, then a chalk page of hairline-ruled lists. Rank comes from type scale, not boxes: heavy condensed Archivo numerals set huge (lesson numbers, minutes, terms) beside small regular labels. Corners are square. Depth is nearly absent; colour fields and rules do the separating.
 
@@ -223,7 +229,7 @@ Motion has one job beyond ordinary state changes: when you move between classes,
 
 **Key Characteristics:**
 
-- Six flat house colours, one per class, each owning whole regions rather than chips.
+- Eight flat house colours, one per class, each owning whole regions rather than chips.
 - Chalk ground, ink type, hairline rules; the dark rail is the only dark surface in light mode.
 - Archivo variable, condensed and heavy for figures and titles, tabular numerals everywhere.
 - Square corners (2px at most); flat surfaces, with one soft shadow reserved for raised panels.
@@ -231,11 +237,11 @@ Motion has one job beyond ordinary state changes: when you move between classes,
 
 ## Colors
 
-A chalk-and-ink ground carrying six saturated, flat house colours, each a set of four values (field, on-colour, soft tint, deep text).
+A chalk-and-ink ground carrying eight saturated, flat house colours, each a set of four values (field, on-colour, soft tint, deep text).
 
 ### Primary
 
-The primary colour is **the house in force**, not a fixed hue. Pages set `data-house` on `main` (and on each rail band) and everything inside reads `--house`, `--house-on`, `--house-soft` and `--house-deep`. A class can fix its house with an optional `colour` field in its offering file, chosen from the picker on the home page's class band and saved as a commit. Otherwise its house is its position among the repo's offerings sorted by path, cycling through six houses in this order (moving to the next free house only when a fixed class holds that one), so the same repo gives the same colours on every device:
+The primary colour is **the house in force**, not a fixed hue. Pages set `data-house` on `main` (and on each rail band) and everything inside reads `--house`, `--house-on`, `--house-soft` and `--house-deep`. A class can fix its house with an optional `colour` field in its offering file, chosen from the picker on the home page's class band and saved as a commit. Otherwise its house is its position among the repo's offerings sorted by path (numbers compared as numbers, so Year 8 comes before Year 10), cycling through eight houses in this order (moving to the next free house only when a fixed class holds that one), so the same repo gives the same colours on every device:
 
 - **Cobalt** (house-cobalt): deep royal blue, white on.
 - **Emerald** (house-emerald): school-field green, white on. Shares its value with `good`.
@@ -243,6 +249,8 @@ The primary colour is **the house in force**, not a fixed hue. Pages set `data-h
 - **Saffron** (house-saffron): marigold yellow, the one house with dark on-text (house-saffron-on).
 - **Plum** (house-plum): violet, white on.
 - **Lagoon** (house-lagoon): deep teal, white on.
+- **Tangerine** (house-tangerine): burnt orange, white on.
+- **Moss** (house-moss): olive green, white on.
 
 Each house's **soft** tint is the hover ground for rows and tiles, the selected row in the jump dialog and the hatched activity fill. Its **deep** value is house-coloured text on paper (dt labels, syllabus ids, stretch tags, the "Change" lead in feedback). Pages outside any class wear **house none**: ink as the field, a pale grey soft.
 
@@ -305,7 +313,7 @@ Dark mode (system preference unless `data-theme='light'`, or forced with `data-t
 ## Layout
 
 - **Shell:** a two-column grid: a sticky, full-height dark rail (248px) and the main column. Below 900px the rail becomes an off-canvas drawer (min(320px, 86vw)) behind a dark top bar with the wordmark, jump and menu buttons, and a 50% ink scrim.
-- **Page width:** content and header inner both cap at 1180px (1440px from 1700px viewports), centred, with a fluid gutter (`clamp(16px, 4vw, 48px)`). The header field itself bleeds full width; only its contents are capped.
+- **Page width:** content and header inner both cap at `--page-max`: 1180px, 1560px from 1700px viewports and 1760px from 2200px (where body type also steps to 16px), centred. Prose measure (`--measure`) grows 68ch to 82ch to 88ch, and the lesson margin column (`--margin-col`) 340px to 400px to 440px, with a fluid gutter (`clamp(16px, 4vw, 48px)`). The header field itself bleeds full width; only its contents are capped.
 - **Vertical rhythm:** 32px from header to content, 36–40px between sections, 14px under section headings, 14–16px row padding in lists, 96px bottom padding on main.
 - **Lists are ruled tables:** each list opens with a 2px ink rule and separates rows with 1px rules. Rows are grids with a fixed leading cell (64px figure column for lessons and run sheet sections; 58px for syllabus ids).
 - **Lesson page:** run sheet column plus a 260–340px sticky margin on the right holding syllabus, feedback and resources; the margin drops under the body below 1000px.
@@ -392,7 +400,7 @@ Rows of rule-coloured bars (100%, 80%, 60%) with a slow linear shimmer, never a 
 ### Do:
 
 - **Do** give every class-scoped page `data-house` and read only `--house`, `--house-on`, `--house-soft` and `--house-deep` inside it.
-- **Do** assign houses through `houseMap` / `houseOf`: an offering's fixed `colour` first, then sorted offering path cycling cobalt, emerald, ruby, saffron, plum, lagoon.
+- **Do** assign houses through `houseMap` / `houseOf`: an offering's fixed `colour` first, then sorted offering path cycling cobalt, emerald, ruby, saffron, plum, lagoon, tangerine, moss.
 - **Do** put identifiers (lesson number, start minute, term, syllabus id) in a fixed leading cell as a condensed figure or bold label.
 - **Do** head every list with a 2px ink rule and divide rows with 1px rules.
 - **Do** set figures in Archivo at 70–75% width and 900 weight, with tabular numerals.

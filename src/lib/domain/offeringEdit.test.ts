@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { houseMap } from '../house.ts';
+import { byNumber, houseMap, termParts } from '../house.ts';
 import { dump } from './format.ts';
 import { withColour } from './offeringEdit.ts';
 import type { Offering } from './types.ts';
@@ -59,7 +59,32 @@ describe('houseMap', () => {
 		expect([...map.values()]).toEqual(['plum', 'cobalt', 'emerald', 'saffron']);
 	});
 
+	it('gives seven classes seven different colours', () => {
+		const seven = Array.from(
+			{ length: 7 },
+			(_, i) => [`offerings/${i}.json`, o()] as [string, object]
+		);
+		expect(new Set(houseMap(seven).values()).size).toBe(7);
+	});
+
 	it('ignores a colour it does not know', () => {
 		expect(houseMap([['offerings/a.json', o('teal')]]).get('offerings/a.json')).toBe('cobalt');
+	});
+});
+
+describe('termParts', () => {
+	it('shortens one term, two terms, and terms with years', () => {
+		expect(termParts('Term 2')).toEqual(['T2']);
+		expect(termParts('Term 1 and Term 3')).toEqual(['T1', 'T3']);
+		expect(termParts('Term 4 2025 and Term 1 2026')).toEqual(['T4 2025', 'T1 2026']);
+		expect(termParts('Standard week')).toEqual(['Standard week']);
+		expect(termParts(undefined)).toEqual([]);
+	});
+});
+
+describe('byNumber', () => {
+	it('puts Year 8 before Year 10', () => {
+		const paths = ['offerings/2026_y10_class1.json', 'offerings/2026_y8_tutor.json'];
+		expect(paths.sort(byNumber)[0]).toBe('offerings/2026_y8_tutor.json');
 	});
 });

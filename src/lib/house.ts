@@ -7,7 +7,16 @@
  * wear `none`.
  */
 
-export const HOUSES = ['cobalt', 'emerald', 'ruby', 'saffron', 'plum', 'lagoon'] as const;
+export const HOUSES = [
+	'cobalt',
+	'emerald',
+	'ruby',
+	'saffron',
+	'plum',
+	'lagoon',
+	'tangerine',
+	'moss'
+] as const;
 
 export type HouseName = (typeof HOUSES)[number];
 export type House = HouseName | 'none';
@@ -30,7 +39,7 @@ export function houseMap(offerings: [string, { colour?: unknown }][]): Map<strin
 			taken.add(offering.colour);
 		}
 	}
-	const sorted = offerings.map(([path]) => path).sort();
+	const sorted = offerings.map(([path]) => path).sort(byNumber);
 	sorted.forEach((path, i) => {
 		if (map.has(path)) return;
 		let house: HouseName = HOUSES[i % HOUSES.length];
@@ -46,6 +55,24 @@ export function houseMap(offerings: [string, { colour?: unknown }][]): Map<strin
 /** The house of the offering at `path`; `none` outside a class. */
 export function houseOf(path: string | null | undefined, houses: Map<string, House>): House {
 	return (path && houses.get(path)) || 'none';
+}
+
+/** Compares paths with their numbers as numbers, so `y8` sorts before `y10`. */
+export function byNumber(a: string, b: string): number {
+	return a.localeCompare(b, undefined, { numeric: true });
+}
+
+/**
+ * A term as short labels: "Term 2" -> ["T2"], "Term 1 and Term 3" ->
+ * ["T1", "T3"], "Term 4 2025 and Term 1 2026" -> ["T4 2025", "T1 2026"].
+ */
+export function termParts(term: string | null | undefined): string[] {
+	if (!term) return [];
+	return term
+		.replace(/\bterm\s*(\d)/gi, 'T$1')
+		.split(/\s*(?:\band\b|&|\+|,)\s*/i)
+		.map((part) => part.trim())
+		.filter(Boolean);
 }
 
 /** "Year 10 Class 1", falling back to the offering id. */

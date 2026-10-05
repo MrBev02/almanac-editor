@@ -241,7 +241,7 @@
 
 	.cols {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+		grid-template-columns: minmax(0, 1fr) minmax(260px, var(--margin-col));
 		gap: 40px;
 		align-items: start;
 	}
@@ -263,7 +263,7 @@
 	.summary {
 		font-size: 17px;
 		line-height: 1.55;
-		max-width: 68ch;
+		max-width: var(--measure);
 		margin: 0 0 32px;
 		color: var(--ink-2);
 	}
@@ -324,7 +324,7 @@
 
 	.body p {
 		margin: 0;
-		max-width: 66ch;
+		max-width: var(--measure);
 	}
 
 	.kind {
@@ -462,7 +462,7 @@
 
 	.dots li {
 		display: grid;
-		grid-template-columns: 58px minmax(0, 1fr);
+		grid-template-columns: minmax(58px, max-content) minmax(0, 1fr);
 		gap: 2px 10px;
 		font-size: 14px;
 	}
@@ -477,6 +477,7 @@
 		font-size: 13px;
 		color: var(--house-deep);
 		padding-top: 1px;
+		white-space: nowrap;
 	}
 
 	.text.missing {

@@ -465,7 +465,7 @@ const offerings: Record<string, Offering> = {
 		year_group: 'Year 10',
 		class_label: 'Class 2',
 		subject: 'subjects/design_tech',
-		units: [{ unit: 'units/product_design', term: 'Term 2' }]
+		units: [{ unit: 'units/product_design', term: 'Term 4 2025 and Term 1 2026' }]
 	}
 };
 

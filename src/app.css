@@ -35,6 +35,10 @@
 	--shadow: 0 1px 2px rgb(21 23 28 / 0.06), 0 6px 18px -6px rgb(21 23 28 / 0.14);
 	--font: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 	--ease: cubic-bezier(0.22, 1, 0.36, 1);
+	/* Widths that grow on large screens (see the media queries below). */
+	--page-max: 1180px;
+	--measure: 68ch;
+	--margin-col: 340px;
 	color-scheme: light;
 
 	/* The house in force; overridden by [data-house]. */
@@ -79,6 +83,18 @@
 	--house-on: #ffffff;
 	--house-soft: #dcf0f5;
 	--house-deep: #0a5568;
+}
+[data-house='tangerine'] {
+	--house: #c2410c;
+	--house-on: #ffffff;
+	--house-soft: #fde6d8;
+	--house-deep: #8a2e07;
+}
+[data-house='moss'] {
+	--house: #4d7c0f;
+	--house-on: #ffffff;
+	--house-soft: #e6f0d5;
+	--house-deep: #365a0a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -137,6 +153,16 @@
 		--house: #138aa9;
 		--house-soft: #0f303a;
 		--house-deep: #a5e2f1;
+	}
+	:root:not([data-theme='light']) [data-house='tangerine'] {
+		--house: #d4501a;
+		--house-soft: #3b1f12;
+		--house-deep: #ffc4a3;
+	}
+	:root:not([data-theme='light']) [data-house='moss'] {
+		--house: #5b8f17;
+		--house-soft: #1f2c10;
+		--house-deep: #c8e6a0;
 	}
 }
 
@@ -537,7 +563,7 @@ label {
 
 /* Page body under the header. */
 .page {
-	max-width: 1180px;
+	max-width: var(--page-max);
 	margin-inline: auto;
 	padding: 32px clamp(16px, 4vw, 48px) 0;
 }
@@ -561,7 +587,21 @@ label {
 }
 
 @media (min-width: 1700px) {
-	.page {
-		max-width: 1440px;
+	:root {
+		--page-max: 1560px;
+		--measure: 82ch;
+		--margin-col: 400px;
+	}
+}
+
+@media (min-width: 2200px) {
+	:root {
+		--page-max: 1760px;
+		--measure: 88ch;
+		--margin-col: 440px;
+	}
+
+	body {
+		font-size: 16px;
 	}
 }

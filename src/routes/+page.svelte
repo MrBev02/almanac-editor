@@ -5,7 +5,7 @@
 	import PageHead from '#lib/components/PageHead.svelte';
 	import { subjectOf } from '#lib/domain/layout.ts';
 	import { join } from '#lib/domain/paths.ts';
-	import { className, houseMap, houseOf, humanise, titleCase } from '#lib/house.ts';
+	import { className, houseMap, houseOf, humanise, termParts, titleCase } from '#lib/house.ts';
 	import { links } from '#lib/links.ts';
 	import { session } from '#lib/session.svelte.ts';
 
@@ -87,11 +87,16 @@
 								{@const dir = join(offering.subject, entry.unit)}
 								{@const unit = unitOf(dir)}
 								{@const count = entry.lessons?.length ?? unit?.lessons?.length ?? 0}
+								{@const parts = termParts(entry.term)}
 								<li>
 									<a href={links.unit(dir, path, entry.term)}>
-										<span class="term" title={entry.term ?? 'Unscheduled'}
-											>{entry.term ? entry.term.replace(/^Term\s*/, 'T') : '–'}</span
+										<span
+											class="term"
+											class:long={parts.length > 1 || (parts[0]?.length ?? 0) > 3}
+											title={entry.term ?? 'Unscheduled'}
 										>
+											{#each parts as part, i (i)}<span>{part}</span>{:else}–{/each}
+										</span>
 										<span class="title"
 											>{unit?.unit_title ?? humanise(entry.unit.split('/').pop() ?? '')}</span
 										>
@@ -224,11 +229,22 @@
 
 	.term {
 		grid-row: span 2;
+		display: flex;
+		flex-direction: column;
+		min-width: 2ch;
 		font-size: 34px;
 		font-weight: 900;
 		font-stretch: 70%;
 		line-height: 0.85;
 		color: var(--house);
+	}
+
+	/* Two terms, or a term with its year: stacked, smaller, still in the cell. */
+	.term.long {
+		gap: 4px;
+		font-size: 17px;
+		line-height: 1;
+		max-width: 7ch;
 	}
 
 	.title {
