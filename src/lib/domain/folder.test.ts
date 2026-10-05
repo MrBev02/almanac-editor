@@ -22,12 +22,18 @@ function folder(name: string, tree: Tree): FolderHandle {
 	return {
 		kind: 'directory',
 		name,
-		getDirectoryHandle: async (key) => {
-			if (typeof tree[key] !== 'object') throw notFound();
+		getDirectoryHandle: async (key, options) => {
+			if (typeof tree[key] !== 'object') {
+				if (!options?.create) throw notFound();
+				tree[key] = {};
+			}
 			return folder(key, tree[key] as Tree);
 		},
-		getFileHandle: async (key) => {
-			if (typeof tree[key] !== 'string') throw notFound();
+		getFileHandle: async (key, options) => {
+			if (typeof tree[key] !== 'string') {
+				if (!options?.create) throw notFound();
+				tree[key] = '';
+			}
 			return file(key);
 		},
 		async *values() {
@@ -85,6 +91,17 @@ describe('FolderStore', () => {
 		const { doc, sha } = await store.readJson<object>('offerings/y7.json');
 		(tree.offerings as Tree)['y7.json'] = '{\n  "id": "y7",\n  "year": 2026\n}\n';
 		await expect(store.writeJson('offerings/y7.json', doc, sha)).rejects.toBeInstanceOf(
+			ConflictError
+		);
+	});
+
+	it('creates a new file, and never over an existing one', async () => {
+		const tree = plans();
+		const store = new FolderStore(folder('almanac', tree));
+		await store.createJson('offerings/y8.json', { id: 'y8' });
+		expect((tree.offerings as Tree)['y8.json']).toBe('{\n  "id": "y8"\n}\n');
+		expect(await store.has('offerings/y8.json')).toBe(true);
+		await expect(store.createJson('offerings/y7.json', { id: 'y7' })).rejects.toBeInstanceOf(
 			ConflictError
 		);
 	});

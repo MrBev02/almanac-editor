@@ -13,6 +13,7 @@ import { dump } from './format.ts';
 import { unitDirs } from './layout.ts';
 import { fromDraft, toDraft } from './lessonEdit.ts';
 import { withColour } from './offeringEdit.ts';
+import { copyOffering } from './newOffering.ts';
 import { lessonsForOffering } from './offerings.ts';
 import type { Lesson, Offering, Unit } from './types.ts';
 import { Schemas } from './validate.ts';
@@ -87,6 +88,17 @@ describe.skipIf(!root)('real data repo', () => {
 			];
 		});
 		expect(problems).toEqual([]);
+	});
+
+	it('copies every offering to next year as a valid file', () => {
+		const invalid = offerings.flatMap((f) => {
+			const original: Offering = JSON.parse(read(f));
+			const year = original.year + 1;
+			const copy = copyOffering(original, { ...original, id: `${year}-copy`, year });
+			const problems = schemas.validate('offering.schema.json', copy);
+			return problems.length ? [`${f}: ${problems.map((p) => p.message).join('; ')}`] : [];
+		});
+		expect(invalid).toEqual([]);
 	});
 
 	it('orders lessons as scripts/offering_lessons.py does', () => {

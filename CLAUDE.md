@@ -36,7 +36,8 @@ src/lib/domain/   plain TypeScript, no Svelte, unit-tested
   format.ts       dump(): the house JSON format
   lessonEdit.ts   toDraft / fromDraft: editing without disturbing the file
   offerings.ts    port of the data repo's scripts/offering_lessons.py
-  offeringEdit.ts withColour(): the one field the editor writes on an offering
+  offeringEdit.ts withColour(): the one field the editor changes on an offering
+  newOffering.ts  copyOffering / blankOffering: a new class, and its id and path
   layout.ts       where units, offerings, schemas and content files are
   validate.ts     the data repo's own schemas/*.schema.json, at run time
 src/lib/data.ts   per-sign-in cache over Repo
@@ -90,10 +91,6 @@ These were agreed in planning, each to become an issue:
 
 - offering editing: reorder, add and remove lessons per unit entry, plus term,
   weeks and notes
-- new offering:
-  - copy one: keep units and lesson order; reset dates, notes and cohort; set
-    Canvas ids to `TODO`
-  - or start blank
 - drag-and-drop
 - offline editing: an installable app with commits queued until back online
 - a Pyodide test: can the data repo's Python run in the browser and replace the

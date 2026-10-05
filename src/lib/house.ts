@@ -26,35 +26,64 @@ export function isHouse(value: unknown): value is HouseName {
 }
 
 /**
- * Every offering's house, keyed by its path. A class without a fixed colour
- * keeps the one its place gives it, and only moves to the next free colour
- * when a fixed class has taken that one.
+ * Every offering's house, keyed by its path. Each year shares out the colours
+ * on its own, so next year's classes get the whole palette. Within a year, a
+ * class without a fixed colour keeps the one its place gives it, and only
+ * moves to the next free colour when a fixed class has taken that one.
  */
-export function houseMap(offerings: [string, { colour?: unknown }][]): Map<string, House> {
+export function houseMap(
+	offerings: [string, { colour?: unknown; year?: unknown }][]
+): Map<string, House> {
 	const map = new Map<string, House>();
-	const taken = new Set<HouseName>();
-	for (const [path, offering] of offerings) {
-		if (isHouse(offering.colour)) {
-			map.set(path, offering.colour);
-			taken.add(offering.colour);
+	const years = Map.groupBy(offerings, ([, o]) => String(o.year ?? ''));
+	for (const group of years.values()) {
+		const taken = new Set<HouseName>();
+		for (const [path, offering] of group) {
+			if (isHouse(offering.colour)) {
+				map.set(path, offering.colour);
+				taken.add(offering.colour);
+			}
 		}
+		const sorted = group.map(([path]) => path).sort(byNumber);
+		sorted.forEach((path, i) => {
+			if (map.has(path)) return;
+			let house: HouseName = HOUSES[i % HOUSES.length];
+			for (let step = 0; step < HOUSES.length && taken.has(house); step++) {
+				house = HOUSES[(i + step + 1) % HOUSES.length];
+			}
+			map.set(path, house);
+			taken.add(house);
+		});
 	}
-	const sorted = offerings.map(([path]) => path).sort(byNumber);
-	sorted.forEach((path, i) => {
-		if (map.has(path)) return;
-		let house: HouseName = HOUSES[i % HOUSES.length];
-		for (let step = 0; step < HOUSES.length && taken.has(house); step++) {
-			house = HOUSES[(i + step + 1) % HOUSES.length];
-		}
-		map.set(path, house);
-		taken.add(house);
-	});
 	return map;
 }
 
 /** The house of the offering at `path`; `none` outside a class. */
 export function houseOf(path: string | null | undefined, houses: Map<string, House>): House {
 	return (path && houses.get(path)) || 'none';
+}
+
+/** Every year that has a class, newest first. */
+export function yearsOf(offerings: [string, { year?: unknown }][]): number[] {
+	const years = new Set<number>();
+	for (const [, o] of offerings) if (typeof o.year === 'number') years.add(o.year);
+	return [...years].sort((a, b) => b - a);
+}
+
+/**
+ * The year the class lists show: the one chosen (a year, or "all"), or, when
+ * nothing valid is chosen, the default from `pick` (this year, or the latest
+ * before it).
+ */
+export function shownYear(
+	choice: string | null,
+	years: number[],
+	pick: (years: number[]) => number | null
+): number | 'all' {
+	if (choice === 'all') return 'all';
+	const chosen = Number(choice);
+	if (choice && years.includes(chosen)) return chosen;
+	return pick(years) ?? 'all';
 }
 
 /** Compares paths with their numbers as numbers, so `y8` sorts before `y10`. */

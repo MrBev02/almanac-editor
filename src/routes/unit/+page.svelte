@@ -147,6 +147,8 @@
 		gap: 2px;
 		overflow-x: auto;
 		padding: 0 clamp(16px, 4vw, 48px);
+		max-width: var(--page-max);
+		margin-inline: auto;
 		scrollbar-width: none;
 	}
 

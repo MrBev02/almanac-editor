@@ -26,8 +26,8 @@ export interface FolderFile {
 export interface FolderHandle {
 	kind: 'directory';
 	name: string;
-	getDirectoryHandle(name: string): Promise<FolderHandle>;
-	getFileHandle(name: string): Promise<FolderFile>;
+	getDirectoryHandle(name: string, options?: { create?: boolean }): Promise<FolderHandle>;
+	getFileHandle(name: string, options?: { create?: boolean }): Promise<FolderFile>;
 	values(): AsyncIterable<FolderHandle | FolderFile>;
 }
 
@@ -102,6 +102,26 @@ export class FolderStore implements Store {
 		if ((await digest(current)) !== sha) {
 			throw new ConflictError(`${path} changed on disk since it was opened.`);
 		}
+		return this.write(handle, doc);
+	}
+
+	async createJson(path: string, doc: unknown): Promise<string> {
+		try {
+			await this.file(path);
+			throw new ConflictError(`${path} already exists.`);
+		} catch (error) {
+			if (!(error instanceof NotFoundError)) throw error;
+		}
+		const parts = path.split('/');
+		const name = parts.pop() ?? '';
+		let dir = this.root;
+		for (const part of parts) dir = await dir.getDirectoryHandle(part, { create: true });
+		const sha = await this.write(await dir.getFileHandle(name, { create: true }), doc);
+		this.tree?.set(path, '');
+		return sha;
+	}
+
+	private async write(handle: FolderFile, doc: unknown): Promise<string> {
 		const text = dump(doc);
 		const writer = await handle.createWritable();
 		await writer.write(text);

@@ -23,4 +23,6 @@ export interface Store {
 	readJson<T>(path: string): Promise<Loaded<T>>;
 	/** Writes `doc` in the house format; returns the new version id. */
 	writeJson(path: string, doc: unknown, sha: string, message: string): Promise<string>;
+	/** Writes a new file; refuses with ConflictError if one is already there. */
+	createJson(path: string, doc: unknown, message: string): Promise<string>;
 }

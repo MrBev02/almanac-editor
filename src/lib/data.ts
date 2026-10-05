@@ -9,6 +9,7 @@ import type { Schema } from '@cfworker/json-schema';
 import { contentPath, offeringPaths, schemaPaths, unitDirs } from './domain/layout.ts';
 import { basename, join } from './domain/paths.ts';
 import { withColour } from './domain/offeringEdit.ts';
+import { offeringPath } from './domain/newOffering.ts';
 import { byNumber } from './house.ts';
 import type { Loaded } from './domain/repo.ts';
 import type { Store } from './domain/store.ts';
@@ -59,6 +60,25 @@ export class Data {
 
 	async offering(path: string): Promise<Offering> {
 		return (await this.store.readJson<Offering>(path)).doc;
+	}
+
+	/**
+	 * Saves a new class as `offerings/<id>.json` and returns its path. Throws
+	 * ConflictError if that file exists, and an Error listing the problems if
+	 * the schema refuses it.
+	 */
+	async createOffering(doc: Offering): Promise<string> {
+		const path = offeringPath(doc.id);
+		const schemas = await this.schemas();
+		if (schemas.has('offering.schema.json')) {
+			const problems = schemas.validate('offering.schema.json', doc);
+			if (problems.length) {
+				throw new Error(problems.map((p) => `${p.path || 'class'}: ${p.message}`).join('; '));
+			}
+		}
+		await this.store.createJson(path, doc, `Add class ${doc.id}`);
+		this.offeringsPromise = null;
+		return path;
 	}
 
 	/**

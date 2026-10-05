@@ -22,6 +22,7 @@ import { allowed, rememberFolder, savedFolder, type BrowserFolder } from './fold
 const TOKEN_KEY = 'almanac-editor:token';
 const TARGET_KEY = 'almanac-editor:target';
 const DEMO_KEY = 'almanac-editor:demo';
+const YEAR_KEY = 'almanac-editor:year';
 
 export const DEFAULT_TARGET: RepoTarget = { owner: '', repo: '', branch: 'main' };
 
@@ -74,6 +75,8 @@ class Session {
 	waiting = $state.raw<BrowserFolder | null>(null);
 	/** False until the remembered folder has been looked up, so pages don't flash. */
 	ready = $state(false);
+	/** The year the class lists show ("all", or a year); null means this year. */
+	year = $state<string | null>(read('local', YEAR_KEY));
 	/** Bumped after a change the lists must re-read, such as a class's colour. */
 	revision = $state(0);
 
@@ -120,6 +123,11 @@ class Session {
 		if (this.source === 'github') return `${this.target.owner}/${this.target.repo}`;
 		if (this.source === 'folder') return this.folder?.name ?? 'folder';
 		return 'the sample lessons';
+	}
+
+	showYear(year: string | null): void {
+		this.year = year;
+		write('local', YEAR_KEY, year);
 	}
 
 	startDemo(): void {

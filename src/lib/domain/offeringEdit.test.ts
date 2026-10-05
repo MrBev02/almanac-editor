@@ -67,6 +67,16 @@ describe('houseMap', () => {
 		expect(new Set(houseMap(seven).values()).size).toBe(7);
 	});
 
+	it('shares colours out within each year', () => {
+		const map = houseMap([
+			['offerings/2026_a.json', { year: 2026 }],
+			['offerings/2026_b.json', { year: 2026 }],
+			['offerings/2027_a.json', { year: 2027 }]
+		]);
+		expect(map.get('offerings/2027_a.json')).toBe('cobalt');
+		expect(map.get('offerings/2026_b.json')).toBe('emerald');
+	});
+
 	it('ignores a colour it does not know', () => {
 		expect(houseMap([['offerings/a.json', o('teal')]]).get('offerings/a.json')).toBe('cobalt');
 	});

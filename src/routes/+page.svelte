@@ -5,7 +5,17 @@
 	import PageHead from '#lib/components/PageHead.svelte';
 	import { subjectOf } from '#lib/domain/layout.ts';
 	import { join } from '#lib/domain/paths.ts';
-	import { className, houseMap, houseOf, humanise, termParts, titleCase } from '#lib/house.ts';
+	import { defaultYear } from '#lib/domain/newOffering.ts';
+	import {
+		className,
+		houseMap,
+		houseOf,
+		humanise,
+		shownYear,
+		termParts,
+		titleCase,
+		yearsOf
+	} from '#lib/house.ts';
 	import { links } from '#lib/links.ts';
 	import { session } from '#lib/session.svelte.ts';
 
@@ -30,17 +40,42 @@
 	{:then { units, subjects, offerings, plans }}
 		{@const colourOf = (path: string, colour: unknown) =>
 			path in chosen ? chosen[path] : typeof colour === 'string' ? colour : null}
-		{@const houses = houseMap(offerings.map(([p, o]) => [p, { colour: colourOf(p, o.colour) }]))}
+		{@const houses = houseMap(
+			offerings.map(([p, o]) => [p, { colour: colourOf(p, o.colour), year: o.year }])
+		)}
+		{@const years = yearsOf(offerings)}
+		{@const shown = shownYear(session.year, years, defaultYear)}
+		{@const visible = shown === 'all' ? offerings : offerings.filter(([, o]) => o.year === shown)}
 		{@const unitOf = (dir: string) => units.find((e) => e.dir === dir)?.unit}
 		<PageHead
-			title="Your classes"
-			lede="{offerings.length} classes, {units.length} units and {plans} lesson plans in {session.label}."
+			title={shown === 'all' ? 'Your classes' : `Your classes in ${shown}`}
+			lede="{visible.length} {visible.length === 1 ? 'class' : 'classes'}{shown === 'all'
+				? ' across every year'
+				: ''}. {units.length} units and {plans} lesson plans in {session.label}."
 		>
 			{#snippet actions()}
 				{#if session.demo}
-					<a class="btn solid" href={links.settings()}>Use your own lessons</a>
+					<a class="btn" href={links.settings()}>Use your own lessons</a>
 				{/if}
+				<a class="btn solid" href={links.newClass()}><Icon name="plus" size={16} /> New class</a>
 			{/snippet}
+			{#if years.length > 1}
+				<nav class="years" aria-label="Year">
+					{#each years as y (y)}
+						<button
+							type="button"
+							aria-pressed={shown === y}
+							onclick={() => session.showYear(y === defaultYear(years) ? null : String(y))}
+							>{y}</button
+						>
+					{/each}
+					<button
+						type="button"
+						aria-pressed={shown === 'all'}
+						onclick={() => session.showYear('all')}>All years</button
+					>
+				</nav>
+			{/if}
 		</PageHead>
 
 		<div class="page">
@@ -58,7 +93,7 @@
 			{/if}
 
 			<ul class="classes">
-				{#each offerings as [path, offering] (path)}
+				{#each visible as [path, offering] (path)}
 					<li class="class" data-house={houseOf(path, houses)}>
 						<div class="tag">
 							<a
@@ -81,6 +116,9 @@
 								fixed={colourOf(path, offering.colour)}
 								onsaved={(colour) => (chosen[path] = colour)}
 							/>
+							<a class="copy" href={links.newClass(path)}>
+								<Icon name="plus" size={14} /> Copy to {offering.year + 1}
+							</a>
 						</div>
 						<ol class="units">
 							{#each offering.units as entry, i (i)}
@@ -143,6 +181,52 @@
 {/if}
 
 <style>
+	.years {
+		display: flex;
+		gap: 2px;
+		overflow-x: auto;
+		padding: 0 clamp(16px, 4vw, 48px);
+		max-width: var(--page-max);
+		margin-inline: auto;
+		scrollbar-width: none;
+	}
+
+	.years button {
+		min-height: 0;
+		padding: 10px 16px 12px;
+		border: 0;
+		border-radius: 0;
+		background: color-mix(in oklab, currentColor 10%, transparent);
+		color: inherit;
+		font-size: 14px;
+		font-weight: 700;
+	}
+
+	.years button:hover:not(:disabled) {
+		background: color-mix(in oklab, currentColor 18%, transparent);
+	}
+
+	.years button[aria-pressed='true'] {
+		background: var(--chalk);
+		color: var(--ink);
+	}
+
+	.copy {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		margin-top: 8px;
+		font-size: 12px;
+		font-weight: 650;
+		text-decoration: none;
+		opacity: 0.85;
+	}
+
+	.copy:hover {
+		opacity: 1;
+		text-decoration: underline;
+	}
+
 	.classes {
 		list-style: none;
 		margin: 0;

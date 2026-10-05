@@ -15,10 +15,13 @@
 		houseMap,
 		houseOf,
 		humanise,
+		shownYear,
 		termParts,
 		titleCase,
+		yearsOf,
 		type House
 	} from '#lib/house.ts';
+	import { defaultYear } from '#lib/domain/newOffering.ts';
 	import { links } from '#lib/links.ts';
 	import { session } from '#lib/session.svelte.ts';
 
@@ -47,6 +50,12 @@
 	});
 
 	const houses = $derived(houseMap(index?.offerings ?? []));
+	const years = $derived(yearsOf(index?.offerings ?? []));
+	const shown = $derived(shownYear(session.year, years, defaultYear));
+	/** The shown year's classes, plus the class being looked at if it is from another year. */
+	const railClasses = $derived(
+		(index?.offerings ?? []).filter(([p, of]) => shown === 'all' || of.year === shown || p === o)
+	);
 	const house = $derived<House>(houseOf(o, houses));
 	let from = $state<House>('none');
 
@@ -178,9 +187,11 @@
 
 			{#if index}
 				<nav aria-label="Classes">
-					<h2 class="rail-h">Classes</h2>
+					<h2 class="rail-h">
+						Classes{#if shown !== 'all' && years.length > 1}<a href={links.home()}>{shown}</a>{/if}
+					</h2>
 					<ul class="bands">
-						{#each index.offerings as [path, offering] (path)}
+						{#each railClasses as [path, offering] (path)}
 							{@const h = houseOf(path, houses)}
 							{@const here = o === path}
 							{@const first = offering.units[0]}
@@ -344,6 +355,16 @@
 	.jump span {
 		flex: 1;
 		text-align: left;
+	}
+
+	.rail-h a {
+		margin-left: 6px;
+		color: var(--rail-ink);
+		text-decoration: none;
+	}
+
+	.rail-h a:hover {
+		text-decoration: underline;
 	}
 
 	.rail-h {

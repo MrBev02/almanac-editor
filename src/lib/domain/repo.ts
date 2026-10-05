@@ -141,13 +141,23 @@ export class Repo implements Store {
 	 * the new blob sha.
 	 */
 	async writeJson(path: string, doc: unknown, sha: string, message: string): Promise<string> {
+		return this.put(path, doc, message, sha);
+	}
+
+	/** Without a sha, GitHub creates the file, and refuses (422) if one exists. */
+	async createJson(path: string, doc: unknown, message: string): Promise<string> {
+		if (await this.has(path)) throw new ConflictError(`${path} already exists.`);
+		return this.put(path, doc, message);
+	}
+
+	private async put(path: string, doc: unknown, message: string, sha?: string): Promise<string> {
 		const text = dump(doc);
 		const response = await this.request(`${this.base}/contents/${encodePath(path)}`, {
 			method: 'PUT',
 			body: JSON.stringify({
 				message,
 				content: encodeBase64(text),
-				sha,
+				...(sha ? { sha } : {}),
 				branch: this.target.branch
 			})
 		});

@@ -421,6 +421,14 @@ const stopMotionLessons: Record<string, Lesson> = {
 };
 
 const offerings: Record<string, Offering> = {
+	'offerings/2025_y07_class_a.json': {
+		id: '2025-y7-class-a',
+		year: 2025,
+		year_group: 'Year 7',
+		class_label: 'Class A',
+		subject: 'subjects/design_tech',
+		units: [{ unit: 'units/product_design', term: 'Term 2', notes: 'Ran a week long.' }]
+	},
 	'offerings/2026_y07_class_a.json': {
 		id: '2026-y7-class-a',
 		year: 2026,

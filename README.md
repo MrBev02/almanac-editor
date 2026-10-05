@@ -18,6 +18,11 @@ private.
   writes an optional `colour` to the offering file.
 - Jumps to any class, unit or lesson with `/` or `Ctrl+K`; `J`/`K` move between
   lessons and `E` edits.
+- Shows one year's classes at a time (this year by default), with tabs for
+  the others.
+- Makes a new class: a copy of an existing one for a new year (units and
+  lesson order kept; notes, cohort, dates and Canvas ids reset), or a blank
+  one.
 - Offers made-up sample lessons to look around without a token.
 - Shows a unit's lessons, either the whole index or in one class's order.
 - Shows a lesson plan, and edits it in place:
