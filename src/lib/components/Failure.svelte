@@ -13,10 +13,12 @@
 	});
 </script>
 
-<div class="warn">
-	{#if auth}
-		GitHub no longer accepts the saved token. <a href={links.settings()}>Add a new one</a>.
-	{:else}
-		{(error as Error)?.message ?? String(error)}
-	{/if}
+<div class="msg warn">
+	<div>
+		{#if auth}
+			GitHub no longer accepts the saved token. <a href={links.settings()}>Add a new one</a>.
+		{:else}
+			{(error as Error)?.message ?? String(error)}
+		{/if}
+	</div>
 </div>

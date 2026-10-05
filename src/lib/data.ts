@@ -7,6 +7,7 @@
 import type { Schema } from '@cfworker/json-schema';
 import { contentPath, offeringPaths, schemaPaths, unitDirs } from './domain/layout.ts';
 import { basename, join } from './domain/paths.ts';
+import { withColour } from './domain/offeringEdit.ts';
 import type { Loaded, Repo } from './domain/repo.ts';
 import type { Lesson, Offering, Unit } from './domain/types.ts';
 import { Schemas } from './domain/validate.ts';
@@ -55,6 +56,29 @@ export class Data {
 
 	async offering(path: string): Promise<Offering> {
 		return (await this.repo.readJson<Offering>(path)).doc;
+	}
+
+	/**
+	 * Fixes a class's colour (or clears it, with null) and commits the offering.
+	 * Throws the repo's ConflictError if the file changed on GitHub since it
+	 * was read, and an Error listing the problems if the schema refuses it.
+	 */
+	async setColour(path: string, colour: string | null): Promise<void> {
+		const { doc, sha } = await this.repo.readJson<Offering>(path);
+		const next = withColour(doc, colour);
+		const schemas = await this.schemas();
+		if (schemas.has('offering.schema.json')) {
+			const problems = schemas.validate('offering.schema.json', next);
+			if (problems.length) {
+				throw new Error(problems.map((p) => `${p.path || 'offering'}: ${p.message}`).join('; '));
+			}
+		}
+		const message = colour ? `Set ${doc.id} colour to ${colour}` : `Clear ${doc.id} colour`;
+		await this.repo.writeJson(path, next, sha, message);
+		const list = await this.offerings();
+		this.offeringsPromise = Promise.resolve(
+			list.map(([p, o]) => [p, p === path ? next : o] as [string, Offering])
+		);
 	}
 
 	lesson(path: string): Promise<Loaded<Lesson>> {

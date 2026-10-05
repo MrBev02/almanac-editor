@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { beforeNavigate } from '$app/navigation';
+	import Icon from './Icon.svelte';
+	import Lane from './Lane.svelte';
 	import ListEditor from './ListEditor.svelte';
 	import {
 		DIFFERENTIATION_LABELS,
@@ -136,259 +138,646 @@
 		location.reload();
 	}
 
+	const over = $derived(draft.duration_minutes !== null && total !== draft.duration_minutes);
+
 	const kinds = Object.entries(KIND_LABELS);
 	const tiers = Object.entries(TIER_LABELS);
 </script>
 
 <svelte:window {onkeydown} {onbeforeunload} />
 
-<div class="bar">
-	<span
-		class="total"
-		class:off={draft.duration_minutes !== null && total !== draft.duration_minutes}
-	>
-		Sections {total} / {draft.duration_minutes ?? '?'} min
-	</span>
-	<span class="muted">{dirty ? 'Unsaved changes' : 'No changes'}</span>
-	<input type="text" bind:value={message} aria-label="Commit message" class="message" />
-	<button
-		class="primary"
-		type="button"
-		onclick={save}
-		disabled={saving || !dirty || !session.token}
-	>
-		{saving ? 'Saving…' : 'Save'}
-	</button>
-	<a href={viewHref}>{dirty ? 'Discard and view' : 'View'}</a>
-</div>
-
-{#if status?.kind === 'saved'}
-	<div class="ok">
-		Saved as a commit to {repo.target.branch}.
-		{#if status.sectionsMoved}
-			The run sheet changed, so the content file's section headings may no longer match. Update
-			them, or record the change under <code>## Plan deviations</code>.
-		{/if}
+<section class="strip" aria-label="Timing as you edit">
+	<div class="strip-h">
+		<p class="total" class:off={over}>
+			<strong>{total}</strong> of {draft.duration_minutes ?? '?'} min
+			{#if over && draft.duration_minutes !== null}
+				<span>
+					{total > draft.duration_minutes
+						? `${total - draft.duration_minutes} over`
+						: `${draft.duration_minutes - total} spare`}
+				</span>
+			{/if}
+		</p>
+		<label class="length">
+			<span>Lesson length</span>
+			<input type="number" min="1" step="1" bind:value={draft.duration_minutes} />
+			<span>min</span>
+		</label>
 	</div>
-{:else if status?.kind === 'problems'}
-	<div class="warn">
-		Not saved. Fix these first:
-		<ul>
-			{#each status.problems as p, i (i)}<li>
-					<code>{p.path || 'plan'}</code>: {p.message}
-				</li>{/each}
-		</ul>
-	</div>
-{:else if status?.kind === 'conflict'}
-	<div class="warn">
-		Not saved: this plan changed on GitHub after you opened it. Your edits are still here. Copy what
-		you need, then <button type="button" onclick={loadLatest}>load the latest version</button>.
-	</div>
-{:else if status?.kind === 'error'}
-	<div class="warn">Not saved. {status.text}</div>
-{/if}
+	<Lane sections={draft.sections} nominal={draft.duration_minutes} />
+</section>
 
-<label class="field"><span>Title</span><input type="text" bind:value={draft.title} /></label>
-<label class="field"
-	><span>Description</span><textarea bind:value={draft.description}></textarea></label
->
-<label class="field">
-	<span>Lesson length (minutes)</span>
-	<input type="number" min="1" step="1" bind:value={draft.duration_minutes} class="minutes" />
-</label>
-<label class="field"><span>Summary</span><textarea bind:value={draft.summary}></textarea></label>
-
-<h2>Run sheet</h2>
-<div class="sections">
-	{#each draft.sections as s, i (i)}
-		<fieldset class="card">
-			<legend>Section {i + 1} <span class="muted">· starts at {starts[i]} min</span></legend>
-			<div class="row">
-				<label class="field grow"
-					><span>Label</span><input type="text" bind:value={s.label} /></label
-				>
-				<label class="field"
-					><span>Minutes</span><input
-						type="number"
-						min="1"
-						step="1"
-						bind:value={s.duration_minutes}
-						class="minutes"
-					/></label
-				>
-				<label class="field">
-					<span>Kind</span>
-					<select bind:value={s.kind}>
-						<option value="">Unclassified</option>
-						{#each kinds as [value, text] (value)}<option {value}>{text}</option>{/each}
-					</select>
-				</label>
-				<label class="field">
-					<span>Tier</span>
-					<select bind:value={s.tier}>
-						<option value="">Core (unset)</option>
-						{#each tiers as [value, text] (value)}<option {value}>{text}</option>{/each}
-					</select>
-				</label>
-			</div>
-			<label class="field"><span>Section</span><textarea bind:value={s.section}></textarea></label>
-			<div class="controls">
-				<button type="button" disabled={i === 0} onclick={() => move(draft.sections, i, -1)}
-					>↑ Move up</button
-				>
-				<button
-					type="button"
-					disabled={i === draft.sections.length - 1}
-					onclick={() => move(draft.sections, i, 1)}>↓ Move down</button
-				>
-				<button type="button" onclick={() => draft.sections.splice(i, 1)}>Remove section</button>
-			</div>
-		</fieldset>
-	{/each}
-</div>
-<button type="button" onclick={() => draft.sections.push(blankSection())}>Add section</button>
-
-<h2>Learning intentions</h2>
-<ListEditor
-	bind:items={draft.learning_intentions}
-	label="Learning intention"
-	addLabel="Add learning intention"
-/>
-
-<h2>Success criteria</h2>
-<ListEditor
-	bind:items={draft.success_criteria}
-	label="Success criterion"
-	addLabel="Add success criterion"
-/>
-
-<h2>Syllabus dot points</h2>
-<p class="muted">
-	Ids, coverage and mode come from the unit's registry and are changed there. Notes can be edited.
-</p>
-{#each draft.curriculum_links as link, i (i)}
-	<label class="field">
-		<span>{link.id} <span class="muted">· {link.coverage}, {link.mode}</span></span>
-		<span class="muted dot">{registry.get(link.id)?.text ?? "Not in the unit's registry"}</span>
-		<textarea bind:value={link.note} placeholder="Note (optional)"></textarea>
-	</label>
-{/each}
-
-<h2>Assessment</h2>
-<label class="field"
-	><span>Formative</span><textarea bind:value={draft.assessment.formative}></textarea></label
->
-<h3>Evidence</h3>
-<ListEditor bind:items={draft.assessment.evidence} label="Evidence" addLabel="Add evidence" />
-
-<h2>Differentiation</h2>
-{#each DIFFERENTIATION_KEYS as key (key)}
-	<label class="field"
-		><span>{DIFFERENTIATION_LABELS[key]}</span><textarea bind:value={draft.differentiation[key]}
-		></textarea></label
-	>
-{/each}
-
-<h2>Feedback for next time</h2>
-{#each draft.feedback as f, i (i)}
-	<fieldset class="card">
-		<legend>Item {i + 1}</legend>
-		<label class="field"><span>Issue</span><textarea bind:value={f.issue}></textarea></label>
-		<label class="field"><span>Change</span><textarea bind:value={f.change}></textarea></label>
+<div class="cols">
+	<div class="main">
 		<label class="field"
-			><span>Raised by class (offering id, optional)</span><input
-				type="text"
-				bind:value={f.offering}
-			/></label
+			><span>Title</span><input type="text" bind:value={draft.title} class="title-input" /></label
 		>
-		<button type="button" onclick={() => draft.feedback.splice(i, 1)}>Remove item</button>
-	</fieldset>
-{/each}
-<button type="button" onclick={() => draft.feedback.push(blankFeedback())}>Add feedback</button>
+		<label class="field"
+			><span>Description</span><textarea bind:value={draft.description}></textarea></label
+		>
+		<label class="field"><span>Summary</span><textarea bind:value={draft.summary}></textarea></label
+		>
 
-{#if draft.resources.length}
-	<h2>Resources</h2>
-	<p class="muted">
-		Links, Canvas targets and files are set in the plan's source. Names and notes can be edited.
-	</p>
-	{#each draft.resources as r, i (i)}
-		<fieldset class="card">
-			<legend>
-				Resource {i + 1}
-				{#if r.canvas}<span class="pill">Canvas: {r.canvas}</span>{/if}
-				{#if r.file}<span class="pill">File: {r.file}</span>{/if}
-				{#if r.url}<span class="pill">Link</span>{/if}
-			</legend>
-			<label class="field"><span>Name</span><input type="text" bind:value={r.name} /></label>
-			<label class="field"><span>Notes</span><textarea bind:value={r.notes}></textarea></label>
-		</fieldset>
-	{/each}
-{/if}
+		<section>
+			<h2>Run sheet</h2>
+			<ol class="run">
+				{#each draft.sections as s, i (i)}
+					<li class:stretch={s.tier === 'stretch'}>
+						<span class="at" aria-hidden="true">{starts[i]}<small>min</small></span>
+						<fieldset>
+							<legend class="sr-only">Section {i + 1}, starts at {starts[i]} min</legend>
+							<div class="row">
+								<label class="field grow"
+									><span>Label</span><input type="text" bind:value={s.label} /></label
+								>
+								<label class="field mins"
+									><span>Minutes</span><input
+										type="number"
+										min="1"
+										step="1"
+										bind:value={s.duration_minutes}
+									/></label
+								>
+								<label class="field">
+									<span>Kind</span>
+									<select bind:value={s.kind}>
+										<option value="">Unclassified</option>
+										{#each kinds as [value, text] (value)}<option {value}>{text}</option>{/each}
+									</select>
+								</label>
+								<label class="field">
+									<span>Tier</span>
+									<select bind:value={s.tier}>
+										<option value="">Core (unset)</option>
+										{#each tiers as [value, text] (value)}<option {value}>{text}</option>{/each}
+									</select>
+								</label>
+							</div>
+							<label class="field"
+								><span>What happens</span><textarea bind:value={s.section}></textarea></label
+							>
+						</fieldset>
+						<div class="controls">
+							<button
+								type="button"
+								class="quiet icon"
+								title="Move up"
+								aria-label="Move section {i + 1} up"
+								disabled={i === 0}
+								onclick={() => move(draft.sections, i, -1)}><Icon name="up" /></button
+							>
+							<button
+								type="button"
+								class="quiet icon"
+								title="Move down"
+								aria-label="Move section {i + 1} down"
+								disabled={i === draft.sections.length - 1}
+								onclick={() => move(draft.sections, i, 1)}><Icon name="down" /></button
+							>
+							<button
+								type="button"
+								class="quiet icon danger"
+								title="Remove section"
+								aria-label="Remove section {i + 1}"
+								onclick={() => draft.sections.splice(i, 1)}><Icon name="bin" /></button
+							>
+						</div>
+					</li>
+				{/each}
+			</ol>
+			<button type="button" class="add" onclick={() => draft.sections.push(blankSection())}>
+				<Icon name="plus" size={16} /> Add section
+			</button>
+		</section>
+
+		<div class="pair">
+			<section>
+				<h2>Learning intentions</h2>
+				<ListEditor
+					bind:items={draft.learning_intentions}
+					label="Learning intention"
+					addLabel="Add learning intention"
+				/>
+			</section>
+			<section>
+				<h2>Success criteria</h2>
+				<ListEditor
+					bind:items={draft.success_criteria}
+					label="Success criterion"
+					addLabel="Add success criterion"
+				/>
+			</section>
+		</div>
+
+		<section>
+			<h2>Assessment</h2>
+			<label class="field"
+				><span>Formative</span><textarea bind:value={draft.assessment.formative}></textarea></label
+			>
+			<h3>Evidence</h3>
+			<ListEditor bind:items={draft.assessment.evidence} label="Evidence" addLabel="Add evidence" />
+		</section>
+
+		<section>
+			<h2>Differentiation</h2>
+			<div class="diff">
+				{#each DIFFERENTIATION_KEYS as key (key)}
+					<label class="field"
+						><span>{DIFFERENTIATION_LABELS[key]}</span><textarea
+							bind:value={draft.differentiation[key]}></textarea></label
+					>
+				{/each}
+			</div>
+		</section>
+	</div>
+
+	<aside class="margin" aria-label="Syllabus, feedback and resources">
+		<section id="feedback">
+			<h2>Feedback for next time</h2>
+			{#each draft.feedback as f, i (i)}
+				<fieldset class="fb">
+					<legend class="sr-only">Feedback {i + 1}</legend>
+					<label class="field"
+						><span>What happened</span><textarea bind:value={f.issue}></textarea></label
+					>
+					<label class="field"
+						><span>Change next time</span><textarea bind:value={f.change}></textarea></label
+					>
+					<label class="field"
+						><span>Raised by class (optional)</span><input
+							type="text"
+							bind:value={f.offering}
+							placeholder="Offering id"
+						/></label
+					>
+					<button type="button" class="quiet" onclick={() => draft.feedback.splice(i, 1)}>
+						<Icon name="bin" size={16} /> Remove
+					</button>
+				</fieldset>
+			{/each}
+			<button type="button" class="add" onclick={() => draft.feedback.push(blankFeedback())}>
+				<Icon name="plus" size={16} /> Add feedback
+			</button>
+		</section>
+
+		<section>
+			<h2>Syllabus</h2>
+			<p class="hint">Ids, coverage and mode come from the unit’s registry. Notes can be edited.</p>
+			{#each draft.curriculum_links as link, i (i)}
+				<label class="field dot">
+					<b class="dot-id">{link.id}</b>
+					<span class="dot-text"
+						>{registry.get(link.id)?.text ?? 'Not in the unit’s registry'}
+						<i>{link.coverage}, {link.mode}</i></span
+					>
+					<textarea bind:value={link.note} placeholder="Note (optional)"></textarea>
+				</label>
+			{:else}
+				<p class="muted">No dot points linked.</p>
+			{/each}
+		</section>
+
+		{#if draft.resources.length}
+			<section>
+				<h2>Resources</h2>
+				<p class="hint">Links, Canvas targets and files are set in the plan’s source.</p>
+				{#each draft.resources as r, i (i)}
+					<fieldset class="res">
+						<legend class="sr-only">Resource {i + 1}</legend>
+						<label class="field"><span>Name</span><input type="text" bind:value={r.name} /></label>
+						{#if r.canvas || r.file || r.url}
+							<p class="where">
+								{#if r.canvas}Canvas: {r.canvas}{/if}
+								{#if r.file}File: {r.file}{/if}
+								{#if r.url}Link{/if}
+							</p>
+						{/if}
+						<label class="field"><span>Notes</span><textarea bind:value={r.notes}></textarea></label
+						>
+					</fieldset>
+				{/each}
+			</section>
+		{/if}
+	</aside>
+</div>
+
+<div class="dock" class:dirty>
+	{#if status?.kind === 'saved'}
+		<div class="msg ok">
+			<div>
+				{session.demo
+					? 'Saved in this tab (sample repo).'
+					: `Saved as a commit to ${repo.target.branch}.`}
+				{#if status.sectionsMoved}
+					The run sheet changed, so the content file’s section headings may no longer match. Update
+					them, or record the change under <code>## Plan deviations</code>.
+				{/if}
+			</div>
+		</div>
+	{:else if status?.kind === 'problems'}
+		<div class="msg warn">
+			<div>
+				Not saved. Fix these first:
+				<ul>
+					{#each status.problems as p, i (i)}<li>
+							<code>{p.path || 'plan'}</code>: {p.message}
+						</li>{/each}
+				</ul>
+			</div>
+		</div>
+	{:else if status?.kind === 'conflict'}
+		<div class="msg warn">
+			<div>
+				Not saved: this plan changed on GitHub after you opened it. Your edits are still here. Copy
+				what you need, then
+				<button type="button" onclick={loadLatest}>Load the latest version</button>
+			</div>
+		</div>
+	{:else if status?.kind === 'error'}
+		<div class="msg warn"><div>Not saved. {status.text}</div></div>
+	{/if}
+	<div class="bar">
+		<span class="state">
+			<i aria-hidden="true"></i>
+			{dirty ? 'Unsaved changes' : 'No changes'}
+		</span>
+		<label class="message">
+			<span class="sr-only">Commit message</span>
+			<Icon name="commit" size={16} />
+			<input type="text" bind:value={message} />
+		</label>
+		<a class="btn" href={viewHref}>
+			<Icon name="eye" size={16} />
+			{dirty ? 'Discard' : 'View'}
+		</a>
+		<button
+			class="primary"
+			type="button"
+			onclick={save}
+			disabled={saving || !dirty || !session.active}
+		>
+			{saving ? 'Saving…' : 'Save'}
+			<kbd>Ctrl S</kbd>
+		</button>
+	</div>
+</div>
 
 <style>
-	.bar {
-		position: sticky;
-		top: 0;
-		z-index: 2;
+	.strip {
+		background: var(--paper);
+		padding: 16px 20px 6px;
+		box-shadow: var(--shadow);
+		margin-bottom: 32px;
+	}
+
+	.strip-h {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 8px 12px;
 		align-items: center;
-		background: var(--page);
-		border-bottom: 1px solid var(--line);
-		padding: 8px 0;
-		margin-bottom: 8px;
+		justify-content: space-between;
+		gap: 8px 20px;
+		margin-bottom: 16px;
 	}
 
 	.total {
-		font-weight: 600;
+		margin: 0;
+		font-size: 14px;
+		color: var(--muted);
+	}
+
+	.total strong {
+		font-size: 34px;
+		font-weight: 900;
+		font-stretch: 75%;
+		color: var(--ink);
+		margin-right: 2px;
+	}
+
+	.total span {
+		margin-left: 8px;
 		padding: 2px 8px;
-		border-radius: 6px;
-		background: var(--teal-bg);
+		font-weight: 700;
+		background: var(--warn-soft);
+		color: var(--warn-deep);
 	}
 
-	.total.off {
-		background: var(--coral-bg);
-		border: 1px solid var(--coral);
+	.total.off strong {
+		color: var(--warn);
 	}
 
-	.message {
-		flex: 1 1 200px;
-		width: auto;
-	}
-
-	.minutes {
-		width: 7em;
-	}
-
-	.row {
+	.length {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 0 12px;
+		align-items: center;
+		gap: 8px;
+		font-size: 13px;
+		font-weight: 700;
+		color: var(--ink-2);
 	}
 
-	.row .grow {
-		flex: 1 1 260px;
+	.length input {
+		width: 5.5em;
+	}
+
+	.cols {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+		gap: 40px;
+		align-items: start;
+	}
+
+	.cols section,
+	.pair {
+		margin-top: 36px;
+	}
+
+	h2 {
+		margin-bottom: 14px;
+	}
+
+	h3 {
+		margin: 4px 0 8px;
+	}
+
+	.title-input {
+		font-size: 20px;
+		font-weight: 750;
+	}
+
+	.run {
+		list-style: none;
+		padding: 0;
+		margin: 0 0 12px;
+		border-top: 2px solid var(--ink);
+	}
+
+	.run li {
+		display: grid;
+		grid-template-columns: 64px minmax(0, 1fr) auto;
+		gap: 16px;
+		padding: 16px 0 4px;
+		border-bottom: 1px solid var(--rule);
+	}
+
+	.run li.stretch .at {
+		color: var(--house);
+	}
+
+	.at {
+		font-size: 36px;
+		font-weight: 900;
+		font-stretch: 70%;
+		color: var(--house);
+		line-height: 1;
+		padding-top: 22px;
+	}
+
+	.at small {
+		display: block;
+		font-size: 11px;
+		font-weight: 600;
+		font-stretch: 100%;
+		color: var(--muted);
+		margin-top: 3px;
 	}
 
 	fieldset {
-		margin: 12px 0;
+		border: 0;
+		margin: 0;
+		padding: 0;
+		min-width: 0;
 	}
 
-	legend {
-		font-weight: 600;
-		padding: 0 4px;
+	.row {
+		display: grid;
+		grid-template-columns: minmax(0, 2fr) minmax(64px, 0.55fr) minmax(0, 1.25fr) minmax(0, 1fr);
+		gap: 0 10px;
 	}
 
 	.controls {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
+		flex-direction: column;
+		gap: 2px;
+		padding-top: 20px;
+	}
+
+	.danger:hover:not(:disabled) {
+		color: var(--warn);
+	}
+
+	.add {
+		border-style: dashed;
+	}
+
+	.pair {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 32px;
+	}
+
+	.pair section {
+		margin-top: 0;
+	}
+
+	.diff {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		gap: 0 16px;
+	}
+
+	.margin {
+		border-top: 2px solid var(--ink);
+		padding-top: 18px;
+	}
+
+	.margin section:first-child {
+		margin-top: 0;
+	}
+
+	.margin h2 {
+		font-size: 17px;
+		font-stretch: 90%;
+	}
+
+	.hint {
+		font-size: 13px;
+		color: var(--muted);
+	}
+
+	.fb {
+		background: var(--paper);
+		border-top: 3px solid var(--house);
+		padding: 14px 14px 10px;
+		margin-bottom: 10px;
 	}
 
 	.dot {
-		display: block;
+		display: grid;
+		grid-template-columns: 58px minmax(0, 1fr);
+		gap: 4px 10px;
+	}
+
+	.dot-id {
+		grid-row: span 2;
 		font-size: 13px;
-		margin-bottom: 4px;
+		color: var(--house-deep);
+		padding-top: 1px;
+	}
+
+	.dot-text {
+		font-size: 13px;
+	}
+
+	.dot-text i {
+		display: block;
+		font-style: normal;
+		font-size: 12px;
+		color: var(--muted);
+	}
+
+	.dot textarea {
+		grid-column: 2;
+	}
+
+	.res {
+		padding-bottom: 6px;
+		margin-bottom: 14px;
+		border-bottom: 1px solid var(--rule);
+	}
+
+	.where {
+		margin: -8px 0 10px;
+		font-size: 12px;
+		color: var(--muted);
+	}
+
+	.dock {
+		position: sticky;
+		bottom: 0;
+		z-index: 5;
+		margin: 48px calc(-1 * clamp(16px, 4vw, 48px)) 0;
+		padding: 0 clamp(16px, 4vw, 48px) 12px;
+		background: linear-gradient(transparent, var(--chalk) 14px);
+	}
+
+	.dock .msg {
+		margin: 0 0 8px;
+		box-shadow: var(--shadow);
+	}
+
+	.dock .msg ul {
+		margin-top: 4px;
+	}
+
+	.bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 10px;
+		padding: 10px 10px 10px 16px;
+		background: var(--ink);
+		color: var(--chalk);
+		box-shadow: var(--shadow);
+	}
+
+	.state {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 13px;
+		font-weight: 650;
+		min-width: 128px;
+	}
+
+	.state i {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		border: 2px solid currentColor;
+		opacity: 0.6;
+	}
+
+	.dirty .state i {
+		background: var(--house);
+		border-color: var(--house);
+		opacity: 1;
+		box-shadow: 0 0 0 3px color-mix(in oklab, var(--house) 35%, transparent);
+	}
+
+	.message {
+		flex: 1 1 220px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: #9a9ea8;
+	}
+
+	.message input {
+		background: #23252c;
+		border-color: #3a3d45;
+		color: var(--chalk);
+		padding: 7px 10px;
+	}
+
+	.bar .btn {
+		background: transparent;
+		color: var(--chalk);
+		border-color: #4a4d55;
+	}
+
+	.bar .btn:hover {
+		border-color: var(--chalk);
+	}
+
+	.bar .primary:disabled {
+		opacity: 0.35;
+	}
+
+	.bar kbd {
+		font-size: 10px;
+	}
+
+	@media (max-width: 1000px) {
+		.cols {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (max-width: 640px) {
+		.run li {
+			grid-template-columns: minmax(0, 1fr) auto;
+		}
+
+		.at {
+			display: none;
+		}
+
+		.pair {
+			grid-template-columns: 1fr;
+		}
+
+		.row {
+			grid-template-columns: minmax(0, 1fr) 80px;
+		}
+
+		.bar kbd,
+		.message {
+			display: none;
+		}
+
+		.bar {
+			flex-wrap: nowrap;
+		}
+
+		.state {
+			flex: 1;
+		}
+
+		.state {
+			min-width: 0;
+		}
+
+		.strip {
+			padding: 14px 12px 4px;
+		}
 	}
 </style>

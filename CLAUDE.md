@@ -29,10 +29,13 @@ src/lib/domain/   plain TypeScript, no Svelte, unit-tested
   format.ts       dump(): the house JSON format
   lessonEdit.ts   toDraft / fromDraft: editing without disturbing the file
   offerings.ts    port of the data repo's scripts/offering_lessons.py
+  offeringEdit.ts withColour(): the one field the editor writes on an offering
   layout.ts       where units, offerings, schemas and content files are
   validate.ts     the data repo's own schemas/*.schema.json, at run time
 src/lib/data.ts   per-sign-in cache over Repo
-src/lib/session.svelte.ts   token and target
+src/lib/session.svelte.ts   token and target, or the sample repo
+src/lib/house.ts  which house colour each class wears
+src/lib/demo.ts   made-up sample repo behind a fake fetch, for trying the app
 src/lib/components/, src/routes/   UI
 ```
 
@@ -45,7 +48,8 @@ src/lib/components/, src/routes/   UI
   - An optional field cleared to empty is removed, unless the file already held
     it empty.
   - Check against a real clone with `DATA_REPO=../subject-almanac npm test`.
-    Run it after any change to `format.ts`, `lessonEdit.ts` or `offerings.ts`.
+    Run it after any change to `format.ts`, `lessonEdit.ts`, `offeringEdit.ts`
+    or `offerings.ts`.
 - **The editor never touches** a plan's `materials` (derived; the data repo's
   `materials.yml` Action regenerates it), curriculum link
   id/coverage/mode/framework, or a resource's url/canvas/file.
@@ -89,7 +93,8 @@ These were agreed in planning, each to become an issue:
   replacing the pasted token (when a second teacher uses the app)
 - a custom domain
 
-The UI is deliberately basic so far.
+The visual design ("House Colours") is recorded in `DESIGN.md`, and product
+context in `PRODUCT.md`. Read both before changing the UI.
 
 ## Tooling
 

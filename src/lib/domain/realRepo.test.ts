@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest';
 import { dump } from './format.ts';
 import { unitDirs } from './layout.ts';
 import { fromDraft, toDraft } from './lessonEdit.ts';
+import { withColour } from './offeringEdit.ts';
 import { lessonsForOffering } from './offerings.ts';
 import type { Lesson, Offering, Unit } from './types.ts';
 import { Schemas } from './validate.ts';
@@ -72,6 +73,20 @@ describe.skipIf(!root)('real data repo', () => {
 			.map((f) => [f, schemas.validate('offering.schema.json', JSON.parse(read(f)))] as const)
 			.filter(([, problems]) => problems.length > 0);
 		expect(invalid).toEqual([]);
+	});
+
+	it('sets and clears a colour on every offering, valid and byte for byte', () => {
+		const problems = offerings.flatMap((f) => {
+			const original: Offering = JSON.parse(read(f));
+			const coloured = withColour(original, 'cobalt');
+			const invalid = schemas.validate('offering.schema.json', coloured);
+			const back = dump(withColour(coloured, original.colour ?? null));
+			return [
+				...(invalid.length ? [`${f}: invalid`] : []),
+				...(back === read(f) ? [] : [`${f}: bytes`])
+			];
+		});
+		expect(problems).toEqual([]);
 	});
 
 	it('orders lessons as scripts/offering_lessons.py does', () => {

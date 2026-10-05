@@ -13,7 +13,12 @@ private.
 
 ## What it does
 
-- Lists the data repo's units and classes (offerings).
+- Lists the data repo's units and classes (offerings). Each class wears a house
+  colour through the app; fix one from the class's band on the home page, which
+  writes an optional `colour` to the offering file.
+- Jumps to any class, unit or lesson with `/` or `Ctrl+K`; `J`/`K` move between
+  lessons and `E` edits.
+- Offers made-up sample lessons to look around without a token.
 - Shows a unit's lessons, either the whole index or in one class's order.
 - Shows a lesson plan, and edits it in place:
   - rewords any prose field

@@ -1,0 +1,211 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-05T23:00:00+11:00",
+  "title": "Design System: Almanac Editor",
+  "extensions": {
+    "colorMeta": {
+      "chalk": { "role": "neutral", "displayName": "Chalk", "canonical": "#f3f4f0", "dark": "#121317", "tonalRamp": ["oklch(15% 0.006 120)", "oklch(25% 0.006 120)", "oklch(35% 0.006 120)", "oklch(45% 0.006 120)", "oklch(55% 0.006 120)", "oklch(65% 0.006 120)", "oklch(80% 0.006 120)", "oklch(96.5% 0.006 120)"] },
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "#fcfcfa", "dark": "#1a1c21" },
+      "sunk": { "role": "neutral", "displayName": "Sunk", "canonical": "#e9eae4", "dark": "#0d0e11" },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#15171c", "dark": "#ecede8", "tonalRamp": ["oklch(15% 0.01 265)", "oklch(21% 0.01 265)", "oklch(35% 0.012 265)", "oklch(45% 0.012 265)", "oklch(55% 0.012 265)", "oklch(65% 0.01 265)", "oklch(80% 0.008 265)", "oklch(95% 0.005 265)"] },
+      "ink-2": { "role": "neutral", "displayName": "Ink 2", "canonical": "#3a3d45", "dark": "#c7c9c2" },
+      "muted": { "role": "neutral", "displayName": "Muted", "canonical": "#5f636d", "dark": "#9a9ea8" },
+      "rule": { "role": "neutral", "displayName": "Rule", "canonical": "#dcded6", "dark": "#2c2f36" },
+      "rule-strong": { "role": "neutral", "displayName": "Rule Strong", "canonical": "#b6b9af", "dark": "#464a53" },
+      "rail": { "role": "neutral", "displayName": "Rail", "canonical": "#15171c", "dark": "#0b0c0f" },
+      "rail-ink": { "role": "neutral", "displayName": "Rail Ink", "canonical": "#f3f4f0", "dark": "#ecede8" },
+      "rail-muted": { "role": "neutral", "displayName": "Rail Muted", "canonical": "#a3a7b0", "dark": "#8d919b" },
+      "warn": { "role": "status", "displayName": "Warn", "canonical": "#c4321d", "dark": "#f0715c", "tonalRamp": ["oklch(15% 0.06 32)", "oklch(25% 0.1 32)", "oklch(35% 0.14 32)", "oklch(45% 0.17 32)", "oklch(54% 0.19 32)", "oklch(65% 0.16 32)", "oklch(80% 0.09 32)", "oklch(95% 0.03 32)"] },
+      "warn-soft": { "role": "status", "displayName": "Warn Soft", "canonical": "#fbe5e0", "dark": "#3a1c17" },
+      "warn-deep": { "role": "status", "displayName": "Warn Deep", "canonical": "#8a1f10", "dark": "#ffb4a6" },
+      "good": { "role": "status", "displayName": "Good", "canonical": "#0b7a55", "dark": "#4cc59a" },
+      "good-soft": { "role": "status", "displayName": "Good Soft", "canonical": "#ddf1e8", "dark": "#15332a" },
+      "note-soft": { "role": "status", "displayName": "Note Soft", "canonical": "#fbefd3", "dark": "#3a2f17" },
+      "note-deep": { "role": "status", "displayName": "Note Deep", "canonical": "#6e4b03", "dark": "#f3cf86" },
+      "house-none": { "role": "primary", "displayName": "House None (ink field)", "canonical": "#15171c", "dark": "#2a2d34" },
+      "house-none-soft": { "role": "primary", "displayName": "House None Soft", "canonical": "#e7e8e3", "dark": "#22252b" },
+      "house-cobalt": { "role": "primary", "displayName": "Cobalt", "canonical": "#1e3bb3", "dark": "#3552d6", "tonalRamp": ["oklch(15% 0.07 266)", "oklch(25% 0.12 266)", "oklch(35% 0.17 266)", "oklch(42% 0.19 266)", "oklch(55% 0.17 266)", "oklch(65% 0.13 266)", "oklch(80% 0.07 266)", "oklch(95% 0.02 266)"] },
+      "house-cobalt-soft": { "role": "primary", "displayName": "Cobalt Soft", "canonical": "#e3e8fa", "dark": "#1b2450" },
+      "house-cobalt-deep": { "role": "primary", "displayName": "Cobalt Deep", "canonical": "#142a85", "dark": "#b7c4ff" },
+      "house-emerald": { "role": "primary", "displayName": "Emerald", "canonical": "#0b7a55", "dark": "#0f8a61", "tonalRamp": ["oklch(15% 0.04 163)", "oklch(25% 0.06 163)", "oklch(35% 0.08 163)", "oklch(45% 0.1 163)", "oklch(51% 0.11 163)", "oklch(65% 0.1 163)", "oklch(80% 0.06 163)", "oklch(95% 0.02 163)"] },
+      "house-emerald-soft": { "role": "primary", "displayName": "Emerald Soft", "canonical": "#dcf1e7", "dark": "#11342a" },
+      "house-emerald-deep": { "role": "primary", "displayName": "Emerald Deep", "canonical": "#075a3e", "dark": "#9fe3c7" },
+      "house-ruby": { "role": "primary", "displayName": "Ruby", "canonical": "#b3263e", "dark": "#c93450", "tonalRamp": ["oklch(15% 0.06 18)", "oklch(25% 0.1 18)", "oklch(35% 0.14 18)", "oklch(45% 0.17 18)", "oklch(51% 0.18 18)", "oklch(65% 0.14 18)", "oklch(80% 0.08 18)", "oklch(95% 0.02 18)"] },
+      "house-ruby-soft": { "role": "primary", "displayName": "Ruby Soft", "canonical": "#f8e1e5", "dark": "#3e1820" },
+      "house-ruby-deep": { "role": "primary", "displayName": "Ruby Deep", "canonical": "#861a2d", "dark": "#ffb8c4" },
+      "house-saffron": { "role": "primary", "displayName": "Saffron", "canonical": "#e8a317", "dark": "#e8a317", "tonalRamp": ["oklch(15% 0.04 76)", "oklch(25% 0.06 76)", "oklch(35% 0.08 76)", "oklch(45% 0.1 76)", "oklch(58% 0.12 76)", "oklch(76% 0.16 76)", "oklch(85% 0.1 76)", "oklch(95% 0.04 76)"] },
+      "house-saffron-on": { "role": "primary", "displayName": "Saffron On", "canonical": "#1e1605" },
+      "house-saffron-soft": { "role": "primary", "displayName": "Saffron Soft", "canonical": "#fbefd3", "dark": "#3a2c0f" },
+      "house-saffron-deep": { "role": "primary", "displayName": "Saffron Deep", "canonical": "#7a5304", "dark": "#f7d58a" },
+      "house-plum": { "role": "primary", "displayName": "Plum", "canonical": "#5e2d91", "dark": "#7a44b5", "tonalRamp": ["oklch(15% 0.06 302)", "oklch(25% 0.1 302)", "oklch(35% 0.14 302)", "oklch(41% 0.16 302)", "oklch(55% 0.15 302)", "oklch(65% 0.12 302)", "oklch(80% 0.07 302)", "oklch(95% 0.02 302)"] },
+      "house-plum-soft": { "role": "primary", "displayName": "Plum Soft", "canonical": "#ece2f7", "dark": "#2c1a40" },
+      "house-plum-deep": { "role": "primary", "displayName": "Plum Deep", "canonical": "#44206a", "dark": "#dcc4fa" },
+      "house-lagoon": { "role": "primary", "displayName": "Lagoon", "canonical": "#0e7490", "dark": "#138aa9", "tonalRamp": ["oklch(15% 0.03 222)", "oklch(25% 0.05 222)", "oklch(35% 0.07 222)", "oklch(45% 0.08 222)", "oklch(52% 0.09 222)", "oklch(65% 0.08 222)", "oklch(80% 0.05 222)", "oklch(95% 0.02 222)"] },
+      "house-lagoon-soft": { "role": "primary", "displayName": "Lagoon Soft", "canonical": "#dcf0f5", "dark": "#0f303a" },
+      "house-lagoon-deep": { "role": "primary", "displayName": "Lagoon Deep", "canonical": "#0a5568", "dark": "#a5e2f1" },
+      "house-on": { "role": "primary", "displayName": "House On (white)", "canonical": "#ffffff" }
+    },
+    "houses": {
+      "order": ["cobalt", "emerald", "ruby", "saffron", "plum", "lagoon"],
+      "assignment": "Index of the offering's path in the sorted list of all offering paths, modulo 6 (src/lib/house.ts houseOf). Pages outside a class wear 'none'.",
+      "roles": {
+        "--house": "flat field: header, rail band, talk segment, primary button, focus ring, caret, figures on paper",
+        "--house-on": "text on the field",
+        "--house-soft": "hover ground, selected row, activity hatch base, pager",
+        "--house-deep": "house-coloured text on paper; primary button hover"
+      }
+    },
+    "typographyMeta": {
+      "numeral": { "displayName": "Numeral", "purpose": "Zero-padded lesson number beside the lesson title in the header." },
+      "hero": { "displayName": "Hero", "purpose": "Welcome screen headline only." },
+      "display": { "displayName": "Display", "purpose": "Page title in the house header, max 22ch." },
+      "figure": { "displayName": "Figure", "purpose": "Leading-cell figures: lesson numbers (40px), start minutes (36px), terms and totals (34px), in house colour." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings (h2); 17px at 90% width in the lesson margin." },
+      "title": { "displayName": "Title", "purpose": "Lesson and unit names in lists and tiles (17-18px)." },
+      "title-sm": { "displayName": "Title Small", "purpose": "h3." },
+      "body": { "displayName": "Body", "purpose": "Reading text, tabular numerals on; summaries at 17px within 62-68ch." },
+      "label": { "displayName": "Label", "purpose": "Field labels, crumbs, header meta, counts; sentence case." },
+      "micro": { "displayName": "Micro", "purpose": "Lane segment labels, tick numbers, finish flag, term codes, offering ids." },
+      "mono": { "displayName": "Mono", "purpose": "Inline code and raw JSON only." }
+    },
+    "fonts": [
+      { "family": "Archivo", "source": "src/lib/assets/fonts/archivo-latin.woff2", "licence": "SIL Open Font License", "axes": { "wght": "100 900", "wdth": "62% 125%" }, "note": "Self-hosted; the CSP forbids hosted fonts." }
+    ],
+    "shadows": [
+      { "name": "panel", "value": "0 1px 2px rgb(21 23 28 / 0.06), 0 6px 18px -6px rgb(21 23 28 / 0.14)", "dark": "0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -8px rgb(0 0 0 / 0.6)", "purpose": "Lane-strip panel, editor save bar and its messages, welcome and settings cards." },
+      { "name": "dialog", "value": "0 2px 4px rgb(0 0 0 / 0.08), 0 24px 60px -12px rgb(0 0 0 / 0.35)", "purpose": "Jump dialog only, over a 45% ink backdrop with 2px blur." },
+      { "name": "focus-ring", "value": "0 0 0 3px color-mix(in oklab, var(--house) 22%, transparent)", "purpose": "Focused text inputs, with the border set to the house." }
+    ],
+    "motion": [
+      { "name": "ease", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "The house ease for every transition." },
+      { "name": "state", "value": "160ms", "purpose": "Control borders, backgrounds, row hovers." },
+      { "name": "press", "value": "120ms translateY(1px)", "purpose": "Button active state." },
+      { "name": "house-handover", "value": "650ms background-color, color via @starting-style from --from", "purpose": "Page header fades from the previous page's house to its own." },
+      { "name": "band", "value": "260ms margin, padding", "purpose": "Rail class band widening on hover and current." },
+      { "name": "lane", "value": "380ms left, width", "purpose": "Lane segments and finish line sliding as timings change." },
+      { "name": "drawer", "value": "280ms transform", "purpose": "Mobile rail drawer." },
+      { "name": "dialog-rise", "value": "220ms translateY(8px) scale(0.985)", "purpose": "Jump dialog opening." },
+      { "name": "reduced-motion", "value": "0.01ms", "purpose": "All animation and transition durations under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "narrow", "value": "640px", "purpose": "Home class tag stacks; run sheet drops the kind column; pairs go single column." },
+      { "name": "lanes", "value": "720px", "purpose": "Unit lane rows wrap the bar under the title." },
+      { "name": "rail", "value": "900px", "purpose": "Rail becomes an off-canvas drawer behind a top bar." },
+      { "name": "margin", "value": "1000px", "purpose": "Lesson margin drops under the body." },
+      { "name": "wide", "value": "1700px", "purpose": "Page cap grows from 1180px to 1440px." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Default paper button: square, firm, border darkens on hover.",
+      "html": "<button class=\"ds-btn\">Edit</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 0 14px; background: #fcfcfa; border: 1px solid #b6b9af; border-radius: 2px; font: 650 14px/1 Archivo, system-ui, sans-serif; color: #15171c; cursor: pointer; transition: border-color 160ms cubic-bezier(0.22, 1, 0.36, 1), transform 120ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn:hover { border-color: #15171c; } .ds-btn:active { transform: translateY(1px); } .ds-btn:focus-visible { outline: 2px solid #1e3bb3; outline-offset: 2px; }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The house field as a button; shown in cobalt.",
+      "html": "<button class=\"ds-btn-primary\">Commit</button>",
+      "css": ".ds-btn-primary { --house: #1e3bb3; --house-on: #ffffff; --house-deep: #142a85; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; background: var(--house); border: 1px solid var(--house); border-radius: 2px; font: 650 14px/1 Archivo, system-ui, sans-serif; color: var(--house-on); cursor: pointer; transition: background-color 160ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn-primary:hover { background: var(--house-deep); border-color: var(--house-deep); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid var(--house); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Paper field with a house caret and house focus ring.",
+      "html": "<label class=\"ds-field\"><span>Title</span><input class=\"ds-input\" type=\"text\" value=\"What is data analysis\"></label>",
+      "css": ".ds-field { display: block; --house: #1e3bb3; } .ds-field > span { display: block; font: 700 13px Archivo, system-ui, sans-serif; color: #3a3d45; margin-bottom: 5px; } .ds-input { width: 100%; background: #fcfcfa; border: 1px solid #b6b9af; border-radius: 2px; padding: 8px 10px; font: 400 15px/1.45 Archivo, system-ui, sans-serif; color: #15171c; caret-color: var(--house); transition: border-color 160ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 160ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-input:hover { border-color: #3a3d45; } .ds-input:focus { outline: none; border-color: var(--house); box-shadow: 0 0 0 3px color-mix(in oklab, var(--house) 22%, transparent); }"
+    },
+    {
+      "name": "Rail Class Bands",
+      "kind": "nav",
+      "refersTo": "class-band",
+      "description": "Classes as flat house bands in the dark rail; the current class fills the width and grows.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-band\" style=\"--house:#1e3bb3;--house-on:#fff\" href=\"#\"><b>Year 10</b><span>Class 1</span><small>10dt-2026</small></a><a class=\"ds-band ds-here\" style=\"--house:#e8a317;--house-on:#1e1605\" href=\"#\"><b>Year 11</b><span>Class 2</span><small>11dt-2026</small></a><a class=\"ds-band\" style=\"--house:#b3263e;--house-on:#fff\" href=\"#\"><b>Year 9</b><span>Class 3</span><small>9dt-2026</small></a></nav>",
+      "css": ".ds-rail { display: grid; gap: 3px; width: 248px; padding: 16px 0; background: #15171c; } .ds-band { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; margin-right: 12px; padding: 11px 16px 11px 20px; background: var(--house); color: var(--house-on); text-decoration: none; font-family: Archivo, system-ui, sans-serif; transition: margin 260ms cubic-bezier(0.22, 1, 0.36, 1), padding 260ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-band:hover { margin-right: 4px; } .ds-band:focus-visible { outline: 2px solid #f3f4f0; outline-offset: 2px; } .ds-band b { font-weight: 850; font-stretch: 75%; font-size: 20px; line-height: 1; } .ds-band span { font-size: 13px; font-weight: 600; opacity: 0.85; } .ds-band small { flex-basis: 100%; font-size: 11px; opacity: 0.75; margin-top: 3px; } .ds-here { margin-right: 0; padding-top: 16px; padding-bottom: 16px; } .ds-here b { font-size: 26px; }"
+    },
+    {
+      "name": "Page Header",
+      "kind": "custom",
+      "refersTo": "page-head",
+      "description": "Full-bleed house field with crumbs, giant numeral and display title; fades in from the previous house.",
+      "html": "<header class=\"ds-head\" style=\"--from:#b3263e\"><nav class=\"ds-crumbs\"><a href=\"#\">Year 10 Class 1</a> &rsaquo; <a href=\"#\">Data and decisions</a></nav><div class=\"ds-row\"><span class=\"ds-numeral\">03</span><h1>What is data analysis</h1></div></header>",
+      "css": ".ds-head { --house: #1e3bb3; --house-on: #ffffff; background: var(--house); color: var(--house-on); padding: 22px 32px 26px; font-family: Archivo, system-ui, sans-serif; transition: background-color 650ms cubic-bezier(0.22, 1, 0.36, 1); } @starting-style { .ds-head { background-color: var(--from, var(--house)); } } .ds-crumbs { font-size: 13px; font-weight: 600; opacity: 0.85; margin-bottom: 14px; } .ds-crumbs a { color: inherit; text-decoration: none; } .ds-crumbs a:hover { text-decoration: underline; } .ds-row { display: flex; align-items: flex-end; gap: 12px 24px; flex-wrap: wrap; } .ds-numeral { font-size: clamp(64px, 9vw, 112px); font-weight: 900; font-stretch: 70%; line-height: 0.78; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; opacity: 0.92; } .ds-head h1 { margin: 0; font-size: clamp(30px, 4.2vw, 52px); font-weight: 850; font-stretch: 75%; line-height: 0.98; letter-spacing: -0.02em; max-width: 22ch; }"
+    },
+    {
+      "name": "Lane Strip",
+      "kind": "custom",
+      "refersTo": "lane-seg-talk",
+      "description": "Run sheet as a carnival lane: solid talk, hatched activity, dashed stretch, finish line, overflow in warn.",
+      "html": "<div class=\"ds-lane\"><div class=\"ds-track\"><div class=\"ds-seg ds-talk\" style=\"left:0;width:16%\"><b>8</b><span>Hook</span></div><div class=\"ds-seg ds-act\" style=\"left:16%;width:40%\"><b>20</b><span>Survey design</span></div><div class=\"ds-seg ds-talk\" style=\"left:56%;width:20%\"><b>10</b><span>Debrief</span></div><div class=\"ds-seg ds-str\" style=\"left:76%;width:14%\"><b>7</b><span>Extension</span></div><div class=\"ds-seg ds-late\" style=\"left:90%;width:10%\"><b>5</b><span>Exit</span></div><div class=\"ds-finish\" style=\"left:90%\"><i>45</i></div></div></div>",
+      "css": ".ds-lane { --house: #1e3bb3; --house-on: #fff; --house-soft: #e3e8fa; --house-deep: #142a85; padding: 12px 18px 12px 0; font-family: Archivo, system-ui, sans-serif; } .ds-track { position: relative; height: 64px; background: #fcfcfa; border-top: 1px solid #b6b9af; border-bottom: 1px solid #b6b9af; } .ds-seg { position: absolute; top: 4px; bottom: 4px; display: flex; flex-direction: column; justify-content: space-between; padding: 5px 7px; overflow: hidden; container-type: inline-size; border-right: 2px solid #fcfcfa; } .ds-seg b { font-size: 24px; font-weight: 800; font-stretch: 85%; line-height: 1; font-variant-numeric: tabular-nums; } .ds-seg span { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } @container (max-width: 64px) { .ds-seg span { display: none; } } @container (max-width: 22px) { .ds-seg b { display: none; } } .ds-talk { background: var(--house); color: var(--house-on); } .ds-act { background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--house) 30%, transparent) 0 2px, transparent 2px 7px), var(--house-soft); color: var(--house-deep); } .ds-str { background: #fcfcfa; color: var(--house-deep); outline: 2px dashed var(--house); outline-offset: -2px; } .ds-late { background: #fbe5e0; color: #8a1f10; outline: 2px solid #c4321d; outline-offset: -2px; } .ds-finish { position: absolute; top: -8px; bottom: -8px; width: 3px; margin-left: -1px; background: #c4321d; } .ds-finish i { position: absolute; top: -2px; left: 4px; font: normal 800 11px/16px Archivo, system-ui, sans-serif; background: #c4321d; color: #fff; padding: 0 5px; }"
+    },
+    {
+      "name": "Unit Lesson Lanes",
+      "kind": "custom",
+      "refersTo": "lane-seg-talk",
+      "description": "Ruled list of lessons: leading figure in house colour, title, compact lane bar; row hover in house soft.",
+      "html": "<ol class=\"ds-lanes\"><li><a class=\"ds-lrow\" href=\"#\"><span class=\"ds-num\">1</span><span class=\"ds-what\"><b>What is data analysis</b><small>45 min</small></span><span class=\"ds-mini\"><i style=\"width:30%;background:#1e3bb3\"></i><i style=\"width:50%\" class=\"ds-h\"></i></span></a></li><li><a class=\"ds-lrow\" href=\"#\"><span class=\"ds-num\">2</span><span class=\"ds-what\"><b>Collecting data</b><small>45 min</small></span><span class=\"ds-mini\"><i style=\"width:20%;background:#1e3bb3\"></i><i style=\"width:70%\" class=\"ds-h\"></i></span></a></li></ol>",
+      "css": ".ds-lanes { --house: #1e3bb3; --house-soft: #e3e8fa; list-style: none; margin: 0; padding: 0; border-top: 2px solid #15171c; font-family: Archivo, system-ui, sans-serif; } .ds-lrow { display: grid; grid-template-columns: 64px minmax(0, 1fr) minmax(160px, 38%); gap: 6px 20px; align-items: center; padding: 14px 4px; border-bottom: 1px solid #dcded6; color: #15171c; text-decoration: none; transition: background-color 160ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-lrow:hover { background: var(--house-soft); } .ds-lrow:hover b { text-decoration: underline; text-decoration-thickness: 2px; } .ds-lrow:focus-visible { outline: 2px solid var(--house); outline-offset: 2px; } .ds-num { font-size: 40px; font-weight: 900; font-stretch: 70%; line-height: 0.85; letter-spacing: -0.03em; color: var(--house); } .ds-what { display: flex; flex-direction: column; gap: 3px; } .ds-what b { font-size: 18px; font-weight: 750; font-stretch: 88%; } .ds-what small { font-size: 13px; color: #5f636d; } .ds-mini { display: flex; height: 12px; background: color-mix(in oklab, #dcded6 55%, transparent); } .ds-mini i { display: block; border-right: 1px solid #fcfcfa; } .ds-h { background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--house) 30%, transparent) 0 2px, transparent 2px 7px), var(--house-soft); }"
+    },
+    {
+      "name": "Feedback Entry",
+      "kind": "card",
+      "refersTo": "feedback-entry",
+      "description": "Feedback as a paper entry topped with a 3px house rule; never a side stripe.",
+      "html": "<ul class=\"ds-fb\"><li><p>Survey task ran long; groups stalled choosing questions.</p><p class=\"ds-change\"><strong>Change next time:</strong> give three starter questions.</p><span class=\"ds-by\">Term 2, week 4</span></li></ul>",
+      "css": ".ds-fb { --house: #1e3bb3; --house-deep: #142a85; list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; font-family: Archivo, system-ui, sans-serif; } .ds-fb li { background: #fcfcfa; color: #15171c; padding: 12px 14px 12px 16px; font-size: 14px; line-height: 1.5; border-top: 3px solid var(--house); } .ds-fb p { margin: 0; } .ds-change { margin-top: 8px !important; color: #3a3d45; } .ds-change strong { color: var(--house-deep); } .ds-by { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 700; color: #5f636d; }"
+    },
+    {
+      "name": "Message",
+      "kind": "custom",
+      "refersTo": "msg-warn",
+      "description": "One tinted block with one leading mark; diamond for warn, circle for ok, square for note.",
+      "html": "<div class=\"ds-msg ds-warn\"><div>This plan runs 5 minutes over its length.</div></div><div class=\"ds-msg ds-ok\"><div>Committed to main.</div></div><div class=\"ds-msg ds-note\"><div>You are viewing sample lessons.</div></div>",
+      "css": ".ds-msg { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; margin: 12px 0; font: 400 14px/1.5 Archivo, system-ui, sans-serif; } .ds-msg::before { content: ''; flex: none; width: 10px; height: 10px; margin-top: 5px; background: currentColor; } .ds-warn { background: #fbe5e0; color: #8a1f10; } .ds-warn::before { transform: rotate(45deg); } .ds-ok { background: #ddf1e8; color: #15171c; } .ds-ok::before { background: #0b7a55; border-radius: 50%; } .ds-note { background: #fbefd3; color: #6e4b03; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "House Colours",
+    "overview": "Every class wears its house colour, and the colour is the navigation. A class's rail band, the page header and the lesson lanes all take the same flat colour, so the screen always says whose lesson you are in. It is a school-sports-carnival world: chalk ground, ink type, six flat house fields that own whole regions, and a run sheet drawn as a lane strip with a finish line. It refuses the neutral grey sidebar workspace with one blue accent.\n\nDensity is that of a working tool used between classes: a dark rail on the left, a house-coloured header band with the title at display size, then a chalk page of hairline-ruled lists. Rank comes from type scale, not boxes: heavy condensed Archivo numerals set huge (lesson numbers, minutes, terms) beside small regular labels. Corners are square. Depth is nearly absent; colour fields and rules do the separating.\n\nMotion has one job beyond ordinary state changes: when you move between classes, the new page header starts in the previous class's colour and fades to its own, so the colour visibly changes hands.",
+    "keyCharacteristics": [
+      "Six flat house colours, one per class, each owning whole regions rather than chips.",
+      "Chalk ground, ink type, hairline rules; the dark rail is the only dark surface in light mode.",
+      "Archivo variable, condensed and heavy for figures and titles, tabular numerals everywhere.",
+      "Square corners (2px at most); flat surfaces, with one soft shadow reserved for raised panels.",
+      "The run sheet is drawn as a lane strip with a finish line at the lesson length."
+    ],
+    "rules": [
+      { "name": "The Colour Owns Regions Rule", "body": "A house colour fills whole fields: the rail band, the header, talk segments, the class band on home. It never shrinks to a pill, chip or badge.", "section": "colors" },
+      { "name": "The One House Per Page Rule", "body": "A page wears exactly one house, the class in the query string. The rail is the only place several houses appear together, and the jump dialog's row swatches are the only other exception.", "section": "colors" },
+      { "name": "The Stable House Rule", "body": "A class's house comes from its sorted offering path, never from a random or hashed value, and never from user choice until offerings can declare one.", "section": "colors" },
+      { "name": "The Scale Contrast Rule", "body": "Rank is made by jumping from a 34–112px condensed figure to a 13px label in the same row, not by colour blocks, boxes or caps. Labels stay small and sentence case.", "section": "typography" },
+      { "name": "The Leading Cell Rule", "body": "Identifiers (lesson number, start minute, term, syllabus id) sit in a fixed leading cell to the left of what they identify, set as a figure or bold label. Nothing sits above a heading as an eyebrow.", "section": "typography" },
+      { "name": "The Self-Hosted Rule", "body": "Archivo ships from `src/lib/assets/fonts/` under its OFL licence. The CSP forbids hosted fonts; never add a font CDN.", "section": "typography" },
+      { "name": "The Flat Field Rule", "body": "House colours are flat and unmodulated: no gradients, no shadows on bands or headers. The only patterned fill is the activity hatch.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do give every class-scoped page `data-house` and read only `--house`, `--house-on`, `--house-soft` and `--house-deep` inside it.",
+      "Do assign houses by sorted offering path through `houseOf`, cycling cobalt, emerald, ruby, saffron, plum, lagoon.",
+      "Do put identifiers (lesson number, start minute, term, syllabus id) in a fixed leading cell as a condensed figure or bold label.",
+      "Do head every list with a 2px ink rule and divide rows with 1px rules.",
+      "Do set figures in Archivo at 70–75% width and 900 weight, with tabular numerals.",
+      "Do present feedback as paper entries topped with a 3px house rule.",
+      "Do keep corners at 0 for fields and 2px for controls.",
+      "Do honour `prefers-reduced-motion`; every transition collapses to near zero."
+    ],
+    "donts": [
+      "Don't put eyebrow or kicker labels above headings; ids and terms go in leading cells.",
+      "Don't use coloured side stripes (a thick border on one edge) on messages, entries, cards or rows.",
+      "Don't shrink a house colour to a chip, pill or badge.",
+      "Don't shade house fields with gradients, glows or shadows; the activity hatch is the only pattern.",
+      "Don't load fonts or any asset from a third-party host; the CSP allows only api.github.com.",
+      "Don't round corners beyond 2px, except circular status dots.",
+      "Don't use uppercase tracking for labels; labels are small, sentence case and bold."
+    ]
+  }
+}

@@ -10,3 +10,6 @@ bun.lockb
 
 # Byte-exact house JSON format, compared in tests
 src/lib/domain/fixtures/
+
+# Impeccable design artifacts
+.impeccable/

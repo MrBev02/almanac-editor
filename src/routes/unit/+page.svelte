@@ -1,8 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import Failure from '#lib/components/Failure.svelte';
+	import Lane from '#lib/components/Lane.svelte';
+	import PageHead from '#lib/components/PageHead.svelte';
+	import { timing } from '#lib/domain/lessonView.ts';
 	import { lessonRefs, offeringEntries } from '#lib/domain/offerings.ts';
 	import { join } from '#lib/domain/paths.ts';
+	import { className, houseMap, houseOf, humanise, titleCase } from '#lib/house.ts';
+	import { subjectOf } from '#lib/domain/layout.ts';
 	import { links } from '#lib/links.ts';
 	import { session } from '#lib/session.svelte.ts';
 
@@ -27,77 +32,289 @@
 					}
 				})
 			);
-			return { unit, offering, lessons, entries: offeringEntries(u, offerings) };
+			return {
+				unit,
+				offering,
+				lessons,
+				entries: offeringEntries(u, offerings),
+				houses: houseMap(offerings)
+			};
 		})();
 	});
 </script>
 
 {#if !u}
-	<div class="warn">No unit given.</div>
+	<PageHead title="No unit given" />
+	<div class="page">
+		<div class="msg warn"><div>Open a unit from the list of classes.</div></div>
+	</div>
 {:else if load}
 	{#await load}
-		<p class="muted">Reading the unit…</p>
-	{:then { unit, offering, lessons, entries }}
-		<p class="muted">{u}</p>
-		<h1>{unit.unit_title}</h1>
-		{#if unit.description}<p class="lede">{unit.description}</p>{/if}
-
-		<nav class="views" aria-label="Lesson order">
-			<a href={links.unit(u)} aria-current={!o ? 'page' : undefined}>Every plan</a>
-			{#each entries as entry, i (i)}
-				<a
-					href={links.unit(u, entry.path, entry.term)}
-					aria-current={o === entry.path && t === entry.term ? 'page' : undefined}
-				>
-					{entry.offering.id}{entry.term ? ` · ${entry.term}` : ''}
+		<PageHead title={null} />
+		<div class="page"><div class="loading"><span></span><span></span><span></span></div></div>
+	{:then { unit, offering, lessons, entries, houses }}
+		{@const minutes = lessons.reduce((n, l) => n + (l.lesson?.duration_minutes ?? 0), 0)}
+		<PageHead
+			crumbs={[
+				{ href: links.home(), label: offering ? className(offering) : titleCase(subjectOf(u)) },
+				...(t ? [{ href: links.unit(u, o, t), label: t }] : [])
+			]}
+			title={unit.unit_title}
+			lede={unit.description}
+		>
+			{#snippet meta()}
+				<span>{lessons.length} lessons</span>
+				<span>{Math.round(minutes / 6) / 10} hours of class time</span>
+				<span>{offering ? `In ${className(offering)}’s order` : 'In the unit’s own order'}</span>
+			{/snippet}
+			<nav class="views" aria-label="Whose order">
+				<a href={links.unit(u)} aria-current={!o ? 'page' : undefined} data-house="none">
+					Every plan
 				</a>
-			{/each}
-		</nav>
+				{#each entries as entry, i (i)}
+					<a
+						href={links.unit(u, entry.path, entry.term)}
+						aria-current={o === entry.path && t === entry.term ? 'page' : undefined}
+						data-house={houseOf(entry.path, houses)}
+					>
+						<span class="sw" aria-hidden="true"></span>
+						{className(entry.offering)}{entry.term ? ` · ${entry.term}` : ''}
+					</a>
+				{/each}
+			</nav>
+		</PageHead>
 
-		<h2>
-			{offering ? `Lessons for ${offering.id}${t ? `, ${t}` : ''}` : 'Every plan in the unit'}
-		</h2>
-		<ol class="lessons">
-			{#each lessons as { ref, lesson } (ref)}
-				<li>
-					{#if lesson}
-						<a href={links.lesson(u, ref, o, t)}>{lesson.title}</a>
-						<span class="muted">· {lesson.duration_minutes} min · {ref}</span>
-					{:else}
-						<span class="warn">{ref} is listed but not in the repo.</span>
-					{/if}
-				</li>
-			{/each}
-		</ol>
+		<div class="page">
+			<div class="legend" aria-hidden="true">
+				<span><i class="k talk"></i>Talk</span>
+				<span><i class="k act"></i>Activity</span>
+				<span><i class="k str"></i>Stretch</span>
+				<span><i class="k fin"></i>Lesson length</span>
+			</div>
+			<ol class="lanes">
+				{#each lessons as { ref, lesson }, i (ref)}
+					<li>
+						{#if lesson}
+							{@const tm = timing(lesson)}
+							<a href={links.lesson(u, ref, o, t)} class="lane-row">
+								<span class="num">{String(i + 1).padStart(2, '0')}</span>
+								<span class="what">
+									<span class="title">{lesson.title}</span>
+									<span class="sub">
+										{lesson.duration_minutes} min · {tm.talk} talk · {tm.activity} activity
+										{#if tm.nominal && tm.total !== tm.nominal}
+											<strong class="off">
+												· {tm.total > tm.nominal
+													? `${tm.total - tm.nominal} min over`
+													: `${tm.nominal - tm.total} min spare`}
+											</strong>
+										{/if}
+										{#if lesson.feedback?.length}
+											<span class="fb">· {lesson.feedback.length} feedback</span>
+										{/if}
+									</span>
+								</span>
+								<span class="bar"
+									><Lane
+										sections={lesson.sections}
+										nominal={lesson.duration_minutes}
+										compact
+									/></span
+								>
+							</a>
+						{:else}
+							<div class="lane-row missing">
+								<span class="num">{String(i + 1).padStart(2, '0')}</span>
+								<span class="what">
+									<span class="title">{humanise(ref.split('/').pop() ?? ref)}</span>
+									<span class="sub">Listed, but <code>{ref}</code> is not in the repo.</span>
+								</span>
+							</div>
+						{/if}
+					</li>
+				{/each}
+			</ol>
+		</div>
 	{:catch error}
-		<Failure {error} />
+		<PageHead title="Could not open this unit" />
+		<div class="page"><Failure {error} /></div>
 	{/await}
 {/if}
 
 <style>
 	.views {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
-		margin: 12px 0;
+		gap: 2px;
+		overflow-x: auto;
+		padding: 0 clamp(16px, 4vw, 48px);
+		scrollbar-width: none;
 	}
 
 	.views a {
-		font-size: 13px;
-		padding: 3px 10px;
-		border: 1px solid var(--line);
-		border-radius: 14px;
-		background: var(--paper);
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 14px 12px;
+		font-size: 14px;
+		font-weight: 650;
+		white-space: nowrap;
 		text-decoration: none;
+		color: inherit;
+		background: color-mix(in oklab, currentColor 10%, transparent);
+	}
+
+	/* The tabs sit inside the header, so they read the page's text colour, not their own house. */
+	.views a {
+		--sw: var(--house);
+	}
+
+	.views a:hover {
+		background: color-mix(in oklab, currentColor 18%, transparent);
 	}
 
 	.views a[aria-current='page'] {
-		background: var(--ink2);
-		color: var(--page);
-		border-color: var(--ink2);
+		background: var(--chalk);
+		color: var(--ink);
 	}
 
-	.lessons li {
-		margin: 4px 0;
+	.sw {
+		width: 10px;
+		height: 10px;
+		background: var(--sw);
+		box-shadow: 0 0 0 1px color-mix(in oklab, #fff 50%, transparent);
+	}
+
+	.legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px 18px;
+		justify-content: flex-end;
+		font-size: 12px;
+		color: var(--muted);
+		margin-bottom: 10px;
+	}
+
+	.legend span {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.k {
+		display: inline-block;
+		width: 16px;
+		height: 10px;
+	}
+
+	.k.talk {
+		background: var(--house);
+	}
+
+	.k.act {
+		background:
+			repeating-linear-gradient(
+				135deg,
+				color-mix(in oklab, var(--house) 35%, transparent) 0 2px,
+				transparent 2px 5px
+			),
+			var(--house-soft);
+	}
+
+	.k.str {
+		outline: 2px dashed var(--house);
+		outline-offset: -2px;
+	}
+
+	.k.fin {
+		width: 3px;
+		height: 14px;
+		background: var(--ink);
+	}
+
+	.lanes {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		border-top: 2px solid var(--ink);
+	}
+
+	.lane-row {
+		display: grid;
+		grid-template-columns: 64px minmax(0, 1fr) minmax(160px, 38%);
+		gap: 6px 20px;
+		align-items: center;
+		padding: 14px 4px;
+		border-bottom: 1px solid var(--rule);
+		text-decoration: none;
+		transition: background-color 160ms var(--ease);
+	}
+
+	a.lane-row:hover {
+		background: var(--house-soft);
+	}
+
+	a.lane-row:hover .title {
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 0.18em;
+	}
+
+	.num {
+		font-size: 40px;
+		font-weight: 900;
+		font-stretch: 70%;
+		line-height: 0.85;
+		letter-spacing: -0.03em;
+		color: var(--house);
+	}
+
+	.missing .num {
+		color: var(--rule-strong);
+	}
+
+	.what {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+		min-width: 0;
+	}
+
+	.title {
+		font-size: 18px;
+		font-weight: 750;
+		font-stretch: 88%;
+		line-height: 1.2;
+	}
+
+	.sub {
+		font-size: 13px;
+		color: var(--muted);
+	}
+
+	.off {
+		color: var(--warn);
+	}
+
+	.fb {
+		color: var(--note-deep);
+		font-weight: 600;
+	}
+
+	.bar {
+		padding: 6px 0;
+	}
+
+	@media (max-width: 720px) {
+		.lane-row {
+			grid-template-columns: 48px minmax(0, 1fr);
+		}
+
+		.num {
+			font-size: 30px;
+		}
+
+		.bar {
+			grid-column: 2;
+		}
 	}
 </style>

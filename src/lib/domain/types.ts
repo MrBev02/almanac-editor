@@ -93,6 +93,8 @@ export interface Offering {
 	year: number;
 	year_group?: string;
 	class_label?: string;
+	/** The class's house colour in the editor; see house.ts. */
+	colour?: string;
 	mode?: string;
 	subject: string;
 	units: OfferingUnit[];
