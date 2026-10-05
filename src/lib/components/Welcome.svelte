@@ -1,9 +1,12 @@
 <script lang="ts">
-	// The signed-out front door. It shows the product doing its job (classes in
-	// their house colours, a run sheet as a lane) with sample data, and offers
-	// the two ways in: your own repo, or a look around the sample lessons.
+	// The front door. It shows the product doing its job (classes in their
+	// house colours, a run sheet as a lane) with sample data, and offers the
+	// ways in: a folder of lesson files on this computer (or the one chosen
+	// last time), a GitHub repo, or a look around the sample lessons.
 	import { goto } from '$app/navigation';
 	import Icon from './Icon.svelte';
+	import { chooseFolder } from '#lib/chooseFolder.ts';
+	import { canOpenFolders } from '#lib/folderAccess.ts';
 	import Lane from './Lane.svelte';
 	import { links } from '#lib/links.ts';
 	import { session } from '#lib/session.svelte.ts';
@@ -35,9 +38,27 @@
 		{ label: 'Exit', section: '', duration_minutes: 5, kind: 'review' as const }
 	];
 
+	const folders = canOpenFolders();
+	let problem = $state<string | null>(null);
+	let busy = $state(false);
+
 	async function tryIt() {
 		session.startDemo();
 		await goto(links.home());
+	}
+
+	async function open() {
+		busy = true;
+		problem = await chooseFolder();
+		busy = false;
+	}
+
+	async function reopen() {
+		busy = true;
+		problem = (await session.reopen())
+			? null
+			: `The browser did not allow access to ${session.waiting?.name}. Try again, or choose the folder.`;
+		busy = false;
 	}
 </script>
 
@@ -46,24 +67,51 @@
 		<p class="mark">Almanac</p>
 		<h1>Fix the lesson once.<br />Every deck and workbook follows.</h1>
 		<p class="lede">
-			Almanac edits the lesson plans in your git repo. Find any lesson in two keystrokes, change the
-			wording or the timings, and save. Each save is a commit, so nothing is ever lost and the
-			slides, workbooks and plans built from it stay in step.
+			Almanac edits the lesson plans in a folder of files. Find any lesson in two keystrokes, change
+			the wording or the timings, and save. The slides, workbooks and plans built from those files
+			stay in step.
 		</p>
 		<div class="ways">
-			<a class="btn primary" href={links.settings()}>
-				Connect your repo
-				<Icon name="right" size={16} />
-			</a>
-			<button onclick={tryIt}> Look around with sample lessons </button>
+			{#if session.waiting}
+				<button class="primary" onclick={reopen} disabled={busy}>
+					<Icon name="file" size={18} />
+					Open {session.waiting.name} again
+				</button>
+				<button onclick={open} disabled={busy}>Choose another folder</button>
+			{:else if folders}
+				<button class="primary" onclick={open} disabled={busy}>
+					<Icon name="file" size={18} />
+					Open your lessons folder
+				</button>
+				<button onclick={tryIt}>Look around with sample lessons</button>
+			{:else}
+				<a class="btn primary" href={links.settings()}>
+					Connect a GitHub repo
+					<Icon name="right" size={16} />
+				</a>
+				<button onclick={tryIt}>Look around with sample lessons</button>
+			{/if}
 		</div>
+		{#if problem}<p class="problem" role="alert">{problem}</p>{/if}
+		<p class="alt">
+			{#if !folders}
+				Opening a folder on this computer needs Chrome or Edge.
+			{:else}
+				Your lessons are on GitHub? <a href={links.settings()}>Connect the repo instead</a>.
+				{#if session.waiting}<button class="link" onclick={tryIt}
+						>Or look at the sample lessons</button
+					>.{/if}
+			{/if}
+		</p>
 		<ul class="facts">
 			<li>
-				<strong>Your files stay yours.</strong> The repo can be private; the token only reaches that one
-				repo.
+				<strong>Your files stay yours.</strong> They stay in their folder; nothing is uploaded anywhere.
 			</li>
-			<li><strong>Nothing to install.</strong> It runs in the browser and talks only to GitHub.</li>
-			<li><strong>Byte for byte.</strong> Saved files match what the repo’s own scripts write.</li>
+			<li>
+				<strong>Git if you want it.</strong> If the folder is a git clone, commit when you choose. Or
+				let Almanac commit each save to GitHub for you.
+			</li>
+			<li><strong>Byte for byte.</strong> Saved files match what your own scripts write.</li>
 		</ul>
 	</section>
 
@@ -151,12 +199,6 @@
 		font-size: 16px;
 	}
 
-	.ways .primary {
-		--house: #f3f4f0;
-		--house-on: #15171c;
-		--house-deep: #ffffff;
-	}
-
 	.ways button {
 		background: transparent;
 		color: var(--rail-ink);
@@ -165,6 +207,49 @@
 
 	.ways button:hover:not(:disabled) {
 		border-color: var(--rail-ink);
+	}
+
+	.ways .primary,
+	.ways .primary:hover:not(:disabled) {
+		background: #f3f4f0;
+		border-color: #f3f4f0;
+		color: #15171c;
+	}
+
+	.ways .primary:hover:not(:disabled) {
+		background: #ffffff;
+	}
+
+	.problem {
+		margin: 16px 0 0;
+		padding: 10px 14px;
+		max-width: 56ch;
+		background: #3a1c17;
+		color: #ffb4a6;
+		font-size: 14px;
+	}
+
+	.alt {
+		margin: 18px 0 0;
+		font-size: 14px;
+		color: #a9ada6;
+	}
+
+	.alt a,
+	.link {
+		color: var(--rail-ink);
+	}
+
+	.link {
+		display: inline;
+		min-height: 0;
+		padding: 0;
+		border: 0;
+		background: none;
+		font: inherit;
+		text-decoration: underline;
+		text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+		text-underline-offset: 0.2em;
 	}
 
 	.facts {

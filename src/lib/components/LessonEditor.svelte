@@ -20,7 +20,8 @@
 		type LessonDraft
 	} from '#lib/domain/lessonEdit.ts';
 	import { stem } from '#lib/domain/paths.ts';
-	import { AuthError, ConflictError, type Repo } from '#lib/domain/repo.ts';
+	import { AuthError, ConflictError } from '#lib/domain/repo.ts';
+	import type { Store } from '#lib/domain/store.ts';
 	import type { Lesson, RegistryEntry } from '#lib/domain/types.ts';
 	import type { Problem, Schemas } from '#lib/domain/validate.ts';
 	import { session } from '#lib/session.svelte.ts';
@@ -31,20 +32,23 @@
 		sha,
 		registry,
 		schemas,
-		repo,
+		store,
 		hasContent,
 		viewHref,
-		onsaved
+		onsaved,
+		onreload
 	}: {
 		path: string;
 		lesson: Lesson;
 		sha: string;
 		registry: Map<string, RegistryEntry>;
 		schemas: Schemas;
-		repo: Repo;
+		store: Store;
 		hasContent: boolean;
 		viewHref: string;
 		onsaved: (lesson: Lesson, sha: string) => void;
+		/** Throws away the loaded plan and reads the file again. */
+		onreload: () => void;
 	} = $props();
 
 	// The editor works on a copy taken when it opens; a save makes the saved plan the new baseline.
@@ -83,14 +87,17 @@
 			status = { kind: 'error', text: (error as Error).message };
 			return;
 		}
-		const problems = schemas.validate('lesson.schema.json', next);
+		// A folder without schemas/ saves unchecked.
+		const problems = schemas.has('lesson.schema.json')
+			? schemas.validate('lesson.schema.json', next)
+			: [];
 		if (problems.length) {
 			status = { kind: 'problems', problems };
 			return;
 		}
 		saving = true;
 		try {
-			const newSha = await repo.writeJson(path, next, sha, message.trim() || `Edit ${stem(path)}`);
+			const newSha = await store.writeJson(path, next, sha, message.trim() || `Edit ${stem(path)}`);
 			const moved = sectionsChanged(lesson, next);
 			onsaved(next, newSha);
 			draft = toDraft(next);
@@ -116,11 +123,11 @@
 		}
 	}
 
-	let reloading = false;
-
 	function onbeforeunload(event: BeforeUnloadEvent) {
-		if (dirty && !reloading) event.preventDefault();
+		if (dirty) event.preventDefault();
 	}
+
+	const where = $derived(session.source === 'github' ? 'on GitHub' : 'on disk');
 
 	beforeNavigate(({ cancel, willUnload }) => {
 		if (
@@ -132,10 +139,9 @@
 		}
 	});
 
-	async function loadLatest() {
-		if (dirty && !confirm('Load the version on GitHub? Your unsaved edits will be lost.')) return;
-		reloading = true;
-		location.reload();
+	function loadLatest() {
+		if (dirty && !confirm(`Load the version ${where}? Your unsaved edits will be lost.`)) return;
+		onreload();
 	}
 
 	const over = $derived(draft.duration_minutes !== null && total !== draft.duration_minutes);
@@ -365,9 +371,11 @@
 	{#if status?.kind === 'saved'}
 		<div class="msg ok">
 			<div>
-				{session.demo
-					? 'Saved in this tab (sample repo).'
-					: `Saved as a commit to ${repo.target.branch}.`}
+				{session.source === 'sample'
+					? 'Saved in this tab (sample lessons).'
+					: session.source === 'github'
+						? `Saved as a commit to ${session.target.branch}.`
+						: `Saved to ${stem(path)}.json in ${session.label}.`}
 				{#if status.sectionsMoved}
 					The run sheet changed, so the content file’s section headings may no longer match. Update
 					them, or record the change under <code>## Plan deviations</code>.
@@ -388,8 +396,8 @@
 	{:else if status?.kind === 'conflict'}
 		<div class="msg warn">
 			<div>
-				Not saved: this plan changed on GitHub after you opened it. Your edits are still here. Copy
-				what you need, then
+				Not saved: this plan changed {where} after you opened it. Your edits are still here. Copy what
+				you need, then
 				<button type="button" onclick={loadLatest}>Load the latest version</button>
 			</div>
 		</div>
@@ -401,11 +409,18 @@
 			<i aria-hidden="true"></i>
 			{dirty ? 'Unsaved changes' : 'No changes'}
 		</span>
-		<label class="message">
-			<span class="sr-only">Commit message</span>
-			<Icon name="commit" size={16} />
-			<input type="text" bind:value={message} />
-		</label>
+		{#if session.source === 'github'}
+			<label class="message">
+				<span class="sr-only">Commit message</span>
+				<Icon name="commit" size={16} />
+				<input type="text" bind:value={message} />
+			</label>
+		{:else}
+			<span class="message where">
+				<Icon name="file" size={16} />
+				{session.label}/…/{stem(path)}.json
+			</span>
+		{/if}
 		<a class="btn" href={viewHref}>
 			<Icon name="eye" size={16} />
 			{dirty ? 'Discard' : 'View'}
@@ -709,6 +724,14 @@
 		align-items: center;
 		gap: 8px;
 		color: #9a9ea8;
+	}
+
+	.where {
+		font-size: 13px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		min-width: 0;
 	}
 
 	.message input {

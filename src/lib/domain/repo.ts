@@ -9,6 +9,7 @@
  */
 
 import { dump, type Json } from './format.ts';
+import type { Store } from './store.ts';
 
 const API = 'https://api.github.com';
 
@@ -30,7 +31,7 @@ export interface Loaded<T> {
 
 /** The token is missing, expired, revoked or lacks access to the repo. */
 export class AuthError extends Error {}
-/** The file changed on GitHub since it was loaded. */
+/** The file changed (on GitHub, or on disk) since it was loaded. */
 export class ConflictError extends Error {}
 export class NotFoundError extends Error {}
 export class GitHubError extends Error {
@@ -44,7 +45,7 @@ export class GitHubError extends Error {
 
 type Fetch = typeof fetch;
 
-export class Repo {
+export class Repo implements Store {
 	private tree: Map<string, string> | null = null;
 	private blobs = new Map<string, string>();
 

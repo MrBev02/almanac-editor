@@ -2,6 +2,8 @@
 	import { AuthError, NotFoundError, Repo } from '#lib/domain/repo.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import PageHead from '#lib/components/PageHead.svelte';
+	import { chooseFolder } from '#lib/chooseFolder.ts';
+	import { canOpenFolders } from '#lib/folderAccess.ts';
 	import { links } from '#lib/links.ts';
 	import { session } from '#lib/session.svelte.ts';
 	import { goto } from '$app/navigation';
@@ -13,6 +15,17 @@
 	let remember = $state(false);
 	let status = $state<{ kind: 'ok' | 'warn'; text: string } | null>(null);
 	let busy = $state(false);
+
+	const folders = canOpenFolders();
+	let folderProblem = $state<string | null>(null);
+	let opening = $state(false);
+
+	async function openFolder() {
+		opening = true;
+		folderProblem = await chooseFolder();
+		opening = false;
+		if (!folderProblem && session.source === 'folder') await goto(links.home());
+	}
 
 	async function connect(event: SubmitEvent) {
 		event.preventDefault();
@@ -50,8 +63,8 @@
 
 <PageHead
 	crumbs={session.active ? [{ href: links.home(), label: 'Classes' }] : []}
-	title={session.token ? 'Settings' : 'Connect your repo'}
-	lede="Almanac reads and writes the lesson plans in one GitHub repo, with a token you make for that repo alone."
+	title="Lesson files"
+	lede="Almanac reads and saves lesson plans in one place: a folder on this computer, or a GitHub repo. Use whichever suits you."
 />
 
 <div class="page">
@@ -62,21 +75,47 @@
 				{session.remembered
 					? 'The token is remembered on this device.'
 					: 'The token is forgotten when this tab closes.'}
-				<br /><button type="button" onclick={() => session.signOut()}>Sign out</button>
+				<br /><button type="button" onclick={() => session.close()}>Sign out</button>
+			</div>
+		</div>
+	{:else if session.source === 'folder'}
+		<div class="msg ok">
+			<div>
+				Using the folder <strong>{session.label}</strong>. Saves go straight into its files; nothing
+				is committed or uploaded.
+				<br /><button type="button" onclick={() => session.close()}>Close the folder</button>
 			</div>
 		</div>
 	{:else if session.demo}
 		<div class="msg note">
 			<div>
-				You are looking at sample lessons. Connect your own repo below, or
-				<button type="button" onclick={() => session.signOut()}>Leave the sample</button>
+				You are looking at sample lessons. Open your own below, or
+				<button type="button" onclick={() => session.close()}>Leave the sample</button>
 			</div>
 		</div>
 	{/if}
 
+	<section class="folder">
+		<h2>A folder on this computer</h2>
+		<p>
+			Choose the folder that holds <code>subjects/</code> and <code>offerings/</code>. Almanac saves
+			into those files.
+		</p>
+		{#if folders}
+			<button class="primary connect" type="button" onclick={openFolder} disabled={opening}>
+				<Icon name="file" size={16} />
+				{session.source === 'folder' ? 'Choose another folder' : 'Open a folder'}
+			</button>
+			{#if folderProblem}<div class="msg warn"><div>{folderProblem}</div></div>{/if}
+		{:else}
+			<p class="muted">This browser cannot open folders. Use Chrome or Edge, or a GitHub repo.</p>
+		{/if}
+	</section>
+
 	<div class="grid">
 		<form onsubmit={connect}>
-			<h2>Data repo</h2>
+			<h2>A GitHub repo</h2>
+			<p class="muted">Almanac commits each save to the branch for you.</p>
 			<div class="row">
 				<label class="field"
 					><span>Owner</span><input type="text" bind:value={owner} required /></label
@@ -135,14 +174,24 @@
 				<li>Expiration: 90 days.</li>
 			</ol>
 			<p class="muted">
-				The token is only ever sent to api.github.com, and the page is not allowed to connect
-				anywhere else.
+				The token is only ever sent to api.github.com, and the page does not connect anywhere else.
 			</p>
 		</aside>
 	</div>
 </div>
 
 <style>
+	.folder {
+		max-width: 68ch;
+		padding-bottom: 32px;
+		margin-bottom: 32px;
+		border-bottom: 2px solid var(--ink);
+	}
+
+	.folder h2 {
+		margin-top: 8px;
+	}
+
 	.grid {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
@@ -232,6 +281,17 @@
 	}
 
 	@media (max-width: 860px) {
+		.folder {
+			max-width: 68ch;
+			padding-bottom: 32px;
+			margin-bottom: 32px;
+			border-bottom: 2px solid var(--ink);
+		}
+
+		.folder h2 {
+			margin-top: 8px;
+		}
+
 		.grid {
 			grid-template-columns: 1fr;
 		}

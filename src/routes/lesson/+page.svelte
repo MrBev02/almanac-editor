@@ -22,6 +22,7 @@
 
 	const load = $derived.by(() => {
 		const data = session.data;
+		void session.revision;
 		if (!data || !path) return null;
 		return (async () => {
 			const [unit, loaded, content, schemas, offering] = await Promise.all([
@@ -43,7 +44,7 @@
 			for (const ref of [refs[at + 1], refs[at - 1]]) {
 				if (ref) data.lesson(join(u, ref)).catch(() => {});
 			}
-			return { unit, loaded, content, schemas, refs, registry, offering, repo: data.repo };
+			return { unit, loaded, content, schemas, refs, registry, offering, store: data.store };
 		})();
 	});
 
@@ -87,7 +88,7 @@
 	{#await load}
 		<PageHead title={null} />
 		<div class="page"><div class="loading"><span></span><span></span><span></span></div></div>
-	{:then { unit, loaded, content, schemas, refs, registry, offering, repo }}
+	{:then { unit, loaded, content, schemas, refs, registry, offering, store }}
 		{@const current = saved?.path === path ? saved : { path, lesson: loaded.doc, sha: loaded.sha }}
 		{@const index = refs.indexOf(l)}
 		{@const prev = index > 0 ? links.lesson(u, refs[index - 1], o, t) : null}
@@ -144,10 +145,15 @@
 						sha={current.sha}
 						{registry}
 						{schemas}
-						{repo}
+						{store}
 						hasContent={content !== null}
 						viewHref={links.lesson(u, l, o, t)}
 						onsaved={(lesson, sha) => (saved = { path, lesson, sha })}
+						onreload={() => {
+							store.refresh();
+							saved = null;
+							session.revision += 1;
+						}}
 					/>
 				{/key}
 			{:else}

@@ -6,10 +6,13 @@
 	let { error }: { error: unknown } = $props();
 
 	const auth = $derived(error instanceof AuthError);
+	// The browser withdrew access to the folder; the front page offers to reopen it.
+	const lost = $derived((error as DOMException)?.name === 'NotAllowedError');
 
 	// A token GitHub no longer accepts is useless; clear it so Settings asks again.
 	$effect(() => {
-		if (auth) session.signOut();
+		if (auth) session.close();
+		else if (lost) session.suspend();
 	});
 </script>
 

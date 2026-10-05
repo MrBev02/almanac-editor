@@ -1,14 +1,16 @@
 /**
- * The data repo as the pages see it: units, offerings, lessons and schemas,
- * read through one `Repo`. Lists are fetched once per sign-in; individual
- * files come from the Repo's blob cache, so revisiting a page is free.
+ * The lesson files as the pages see it: units, offerings, lessons and schemas,
+ * read through one `Store` (a folder, or a GitHub repo). Lists are read once
+ * per source; for GitHub, individual files come from the Repo's blob cache,
+ * so revisiting a page is free.
  */
 
 import type { Schema } from '@cfworker/json-schema';
 import { contentPath, offeringPaths, schemaPaths, unitDirs } from './domain/layout.ts';
 import { basename, join } from './domain/paths.ts';
 import { withColour } from './domain/offeringEdit.ts';
-import type { Loaded, Repo } from './domain/repo.ts';
+import type { Loaded } from './domain/repo.ts';
+import type { Store } from './domain/store.ts';
 import type { Lesson, Offering, Unit } from './domain/types.ts';
 import { Schemas } from './domain/validate.ts';
 
@@ -22,14 +24,14 @@ export class Data {
 	private offeringsPromise: Promise<[string, Offering][]> | null = null;
 	private schemasPromise: Promise<Schemas> | null = null;
 
-	constructor(readonly repo: Repo) {}
+	constructor(readonly store: Store) {}
 
 	units(): Promise<UnitEntry[]> {
-		this.unitsPromise ??= this.repo.paths().then((paths) =>
+		this.unitsPromise ??= this.store.paths().then((paths) =>
 			Promise.all(
 				unitDirs(paths.keys()).map(async (dir) => ({
 					dir,
-					unit: (await this.repo.readJson<Unit>(join(dir, 'unit.json'))).doc
+					unit: (await this.store.readJson<Unit>(join(dir, 'unit.json'))).doc
 				}))
 			)
 		);
@@ -37,17 +39,17 @@ export class Data {
 	}
 
 	async unit(dir: string): Promise<Unit> {
-		return (await this.repo.readJson<Unit>(join(dir, 'unit.json'))).doc;
+		return (await this.store.readJson<Unit>(join(dir, 'unit.json'))).doc;
 	}
 
 	offerings(): Promise<[string, Offering][]> {
-		this.offeringsPromise ??= this.repo
+		this.offeringsPromise ??= this.store
 			.paths()
 			.then((paths) =>
 				Promise.all(
 					offeringPaths(paths.keys()).map(
 						async (path) =>
-							[path, (await this.repo.readJson<Offering>(path)).doc] as [string, Offering]
+							[path, (await this.store.readJson<Offering>(path)).doc] as [string, Offering]
 					)
 				)
 			);
@@ -55,18 +57,18 @@ export class Data {
 	}
 
 	async offering(path: string): Promise<Offering> {
-		return (await this.repo.readJson<Offering>(path)).doc;
+		return (await this.store.readJson<Offering>(path)).doc;
 	}
 
 	/**
-	 * Fixes a class's colour (or clears it, with null) and commits the offering.
-	 * Throws the repo's ConflictError if the file changed on GitHub since it
-	 * was read, and an Error listing the problems if the schema refuses it.
+	 * Fixes a class's colour (or clears it, with null) and saves the offering.
+	 * Throws ConflictError if the file changed since it was read, and an Error listing the problems if the schema refuses it.
 	 */
 	async setColour(path: string, colour: string | null): Promise<void> {
-		const { doc, sha } = await this.repo.readJson<Offering>(path);
+		const { doc, sha } = await this.store.readJson<Offering>(path);
 		const next = withColour(doc, colour);
 		const schemas = await this.schemas();
+		// A folder without schemas/ saves unchecked.
 		if (schemas.has('offering.schema.json')) {
 			const problems = schemas.validate('offering.schema.json', next);
 			if (problems.length) {
@@ -74,7 +76,7 @@ export class Data {
 			}
 		}
 		const message = colour ? `Set ${doc.id} colour to ${colour}` : `Clear ${doc.id} colour`;
-		await this.repo.writeJson(path, next, sha, message);
+		await this.store.writeJson(path, next, sha, message);
 		const list = await this.offerings();
 		this.offeringsPromise = Promise.resolve(
 			list.map(([p, o]) => [p, p === path ? next : o] as [string, Offering])
@@ -82,21 +84,21 @@ export class Data {
 	}
 
 	lesson(path: string): Promise<Loaded<Lesson>> {
-		return this.repo.readJson<Lesson>(path);
+		return this.store.readJson<Lesson>(path);
 	}
 
 	/** The plan's paired content file, or null where none is written yet. */
 	async content(lessonPath: string): Promise<string | null> {
 		const path = contentPath(lessonPath);
-		if (!(await this.repo.has(path))) return null;
-		return (await this.repo.readText(path)).doc;
+		if (!(await this.store.has(path))) return null;
+		return (await this.store.readText(path)).doc;
 	}
 
 	schemas(): Promise<Schemas> {
-		this.schemasPromise ??= this.repo.paths().then(async (paths) => {
+		this.schemasPromise ??= this.store.paths().then(async (paths) => {
 			const entries = await Promise.all(
 				schemaPaths(paths.keys()).map(
-					async (path) => [basename(path), (await this.repo.readJson<Schema>(path)).doc] as const
+					async (path) => [basename(path), (await this.store.readJson<Schema>(path)).doc] as const
 				)
 			);
 			return new Schemas(Object.fromEntries(entries));

@@ -34,13 +34,11 @@
 		{@const unitOf = (dir: string) => units.find((e) => e.dir === dir)?.unit}
 		<PageHead
 			title="Your classes"
-			lede="{offerings.length} classes, {units.length} units and {plans} lesson plans in {session.demo
-				? 'the sample repo'
-				: `${session.shown.owner}/${session.shown.repo}`}."
+			lede="{offerings.length} classes, {units.length} units and {plans} lesson plans in {session.label}."
 		>
 			{#snippet actions()}
 				{#if session.demo}
-					<a class="btn solid" href={links.settings()}>Use your own repo</a>
+					<a class="btn solid" href={links.settings()}>Use your own lessons</a>
 				{/if}
 			{/snippet}
 		</PageHead>
@@ -56,7 +54,7 @@
 			{/if}
 
 			{#if offerings.length === 0}
-				<p class="muted">This repo has no classes in <code>offerings/</code> yet.</p>
+				<p class="muted">There are no classes in <code>offerings/</code> yet.</p>
 			{/if}
 
 			<ul class="classes">

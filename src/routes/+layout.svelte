@@ -128,7 +128,9 @@
 
 <svelte:window {onkeydown} />
 
-{#if !session.active && !onSettings}
+{#if !session.ready}
+	<div class="boot" aria-hidden="true"></div>
+{:else if !session.active && !onSettings}
 	<Welcome />
 {:else}
 	<div class="app" class:menu-open={menuOpen}>
@@ -151,10 +153,12 @@
 			<a href={links.home()} class="mark big">Almanac</a>
 			{#if session.active}
 				<p class="repo">
-					{#if session.demo}
+					{#if session.source === 'sample'}
 						Sample lessons
+					{:else if session.source === 'folder'}
+						<Icon name="file" size={13} /> {session.label}
 					{:else}
-						{session.shown.owner}/{session.shown.repo}<span>@{session.shown.branch}</span>
+						{session.label}<span>@{session.target.branch}</span>
 					{/if}
 				</p>
 				<button class="jump" onclick={() => jump?.open()}>
@@ -234,7 +238,7 @@
 			<div class="rail-foot">
 				<a href={links.settings()} aria-current={onSettings ? 'page' : undefined}>
 					<Icon name="gear" size={16} />
-					{session.demo ? 'Use your own repo' : 'Settings'}
+					{session.source === 'sample' ? 'Use your own lessons' : 'Lesson files'}
 				</a>
 			</div>
 		</aside>
@@ -254,6 +258,11 @@
 {/if}
 
 <style>
+	.boot {
+		min-height: 100vh;
+		background: var(--rail);
+	}
+
 	.app {
 		--rail-w: 248px;
 		display: grid;
@@ -299,6 +308,11 @@
 		font-size: 12px;
 		color: var(--rail-muted);
 		overflow-wrap: anywhere;
+	}
+
+	.repo :global(svg) {
+		display: inline-block;
+		vertical-align: -2px;
 	}
 
 	.repo span {

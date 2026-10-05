@@ -34,10 +34,12 @@ seconds, edits it with confidence, and colleagues ask how to get it.
 
 ## Positioning
 
-The data repo is the database. Every save is a commit, git is the history and
-undo, and files stay byte-identical to what the repo's own Python scripts
-write. One source feeds every output; no other planner a teacher uses works
-this way.
+The lesson files are the database: plain JSON in a folder the teacher owns,
+byte-identical to what their own scripts write. One source feeds every
+output; no other planner a teacher uses works this way. Where the files live
+is the teacher's choice: a folder on their computer (the lowest entry point,
+no account needed), or a GitHub repo where each save is a commit. Git is
+available, never required.
 
 ## Operating Context
 
@@ -83,6 +85,7 @@ testimonials, users or metrics exist.
    opening the generated deck.
 2. Never surprise the file: saves are byte-exact and the editor only touches
    what it owns.
-3. Every save is a commit; make that safety visible, not scary.
+3. Never dictate the workflow: a folder is enough, and git (by hand, or
+   through GitHub) is the teacher's choice. Make each save's effect visible.
 4. Serve the four real moments (fix, plan, check, reflect) without modes the
    teacher has to manage.

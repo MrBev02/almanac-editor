@@ -1,6 +1,6 @@
 <script lang="ts">
-	// Fixes a class's colour by writing `colour` into its offering file, as a
-	// commit. "Automatic" removes the field again.
+	// Fixes a class's colour by writing `colour` into its offering file (a
+	// commit, on GitHub). "Automatic" removes the field again.
 	import Icon from './Icon.svelte';
 	import { ConflictError } from '#lib/domain/repo.ts';
 	import { HOUSES } from '#lib/house.ts';
@@ -35,7 +35,7 @@
 		} catch (e) {
 			error =
 				e instanceof ConflictError
-					? 'This class changed on GitHub. Reload the page and try again.'
+					? 'This class’s file changed since the page loaded. Reload the page and try again.'
 					: /colour|additional/i.test((e as Error).message)
 						? 'Your offering schema does not allow colour yet. Add it to schemas/offering.schema.json.'
 						: `Not saved. ${(e as Error).message}`;
@@ -85,8 +85,8 @@
 			</button>
 		</div>
 		<p class="note">
-			{#if error}{error}{:else if session.demo}Saved in this tab only.{:else}Saved as a commit to
-				the offering file.{/if}
+			{#if error}{error}{:else if session.source === 'sample'}Saved in this tab only.{:else if session.source === 'github'}Saved
+				as a commit to the offering file.{:else}Saved to the offering file.{/if}
 		</p>
 	{/if}
 </div>

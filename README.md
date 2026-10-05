@@ -43,9 +43,16 @@ offerings/*.json                  classes: which units, which order
 schemas/*.schema.json             JSON Schema (draft 2020-12) for the above
 ```
 
-## Signing in
+## Where the lessons live
 
-Create a fine-grained personal access token at
+**A folder on your computer** (Chrome or Edge). Choose the folder that holds
+`subjects/` and `offerings/`. Almanac saves straight into those files and
+touches nothing else. If the folder is a git clone, commit when and how you
+like; Almanac never does it for you. The browser remembers the folder, and may
+ask you to allow access again on a later visit.
+
+**A GitHub repo.** Almanac commits each save to the branch. Create a
+fine-grained personal access token at
 <https://github.com/settings/personal-access-tokens/new>:
 
 - Repository access: only the data repo.

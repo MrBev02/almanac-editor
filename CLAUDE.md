@@ -12,20 +12,27 @@ which is the wrong place.
   private and holds everything else. Never commit units, lessons, offerings or
   schemas from a data repo here, not even as test fixtures. Fixtures in
   `src/lib/domain/fixtures/` are made up.
-- **The data repo is the database.** The app reads and writes it through the
-  GitHub API. Each save is a commit, and git is the history and the undo.
+- **The files are the database.** The teacher chooses where they live:
+  - a folder on their computer, through the File System Access API (Chrome and
+    Edge). A save writes the file and nothing else; git is optional and is the
+    teacher's business, never the app's.
+  - or a GitHub repo, through the API, where each save is a commit.
+    Both sit behind `Store`; pages never know which they have. Don't add a
+    feature that only works with one of them without saying so in the UI.
 - **Static SPA on GitHub Pages.** SvelteKit 3, Svelte 5 runes,
   `adapter-static`, `ssr = false`, and every route prerendered as a shell.
   Pages take their parameters from the query string (`/lesson?u=&l=&o=&t=`),
   the same as the data repo's `scripts/view.py`, which this app replaces.
-- **Generic.** Owner, repo and branch come from Settings. Nothing hard-codes
-  this teacher.
+- **Generic.** The folder, or owner, repo and branch, come from the teacher.
+  Nothing hard-codes this teacher.
 
 ## Layout
 
 ```
 src/lib/domain/   plain TypeScript, no Svelte, unit-tested
+  store.ts        Store: what the app needs from wherever the files live
   repo.ts         the only code that talks to GitHub (trees, blobs, contents PUT)
+  folder.ts       FolderStore: a local folder (subjects/, offerings/, schemas/)
   format.ts       dump(): the house JSON format
   lessonEdit.ts   toDraft / fromDraft: editing without disturbing the file
   offerings.ts    port of the data repo's scripts/offering_lessons.py
@@ -34,6 +41,8 @@ src/lib/domain/   plain TypeScript, no Svelte, unit-tested
   validate.ts     the data repo's own schemas/*.schema.json, at run time
 src/lib/data.ts   per-sign-in cache over Repo
 src/lib/session.svelte.ts   token and target, or the sample repo
+src/lib/folderAccess.ts   choosing a folder, remembering it in IndexedDB
+src/lib/chooseFolder.ts   pick, check it holds lesson plans, open
 src/lib/house.ts  which house colour each class wears
 src/lib/demo.ts   made-up sample repo behind a fake fetch, for trying the app
 src/lib/components/, src/routes/   UI
@@ -53,7 +62,8 @@ src/lib/components/, src/routes/   UI
 - **The editor never touches** a plan's `materials` (derived; the data repo's
   `materials.yml` Action regenerates it), curriculum link
   id/coverage/mode/framework, or a resource's url/canvas/file.
-- **Validation uses the data repo's schemas**, fetched at run time, through
+- **Validation uses the data repo's schemas** when the files include
+  `schemas/` (a folder without them saves unchecked), read at run time, through
   `@cfworker/json-schema`. Not Ajv: Ajv compiles with `new Function`, which the
   CSP blocks. Don't add `'unsafe-eval'`.
 - **Duplicated logic.** `offerings.ts` duplicates Python in the data repo. The
