@@ -39,12 +39,6 @@ export interface Resource {
 	notes?: string;
 }
 
-export interface Feedback {
-	issue: string;
-	change?: string;
-	offering?: string;
-}
-
 export interface Lesson {
 	title: string;
 	description: string;
@@ -57,7 +51,6 @@ export interface Lesson {
 	assessment?: { formative?: string; evidence?: string[] };
 	differentiation?: Differentiation;
 	resources?: Resource[];
-	feedback?: Feedback[];
 	materials?: unknown;
 	[key: string]: unknown;
 }

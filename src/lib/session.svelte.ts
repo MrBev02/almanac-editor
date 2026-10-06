@@ -23,6 +23,7 @@ const TOKEN_KEY = 'almanac-editor:token';
 const TARGET_KEY = 'almanac-editor:target';
 const DEMO_KEY = 'almanac-editor:demo';
 const YEAR_KEY = 'almanac-editor:year';
+const TEACHER_KEY = 'almanac-editor:teacher';
 
 export const DEFAULT_TARGET: RepoTarget = { owner: '', repo: '', branch: 'main' };
 
@@ -77,6 +78,8 @@ class Session {
 	ready = $state(false);
 	/** The year the class lists show ("all", or a year); null means this year. */
 	year = $state<string | null>(read('local', YEAR_KEY));
+	/** Who taught, as last typed when marking a lesson taught on this device. */
+	teacher = $state(read('local', TEACHER_KEY) ?? '');
 	/** Bumped after a change the lists must re-read, such as a class's colour. */
 	revision = $state(0);
 
@@ -128,6 +131,11 @@ class Session {
 	showYear(year: string | null): void {
 		this.year = year;
 		write('local', YEAR_KEY, year);
+	}
+
+	rememberTeacher(name: string): void {
+		this.teacher = name;
+		write('local', TEACHER_KEY, name || null);
 	}
 
 	startDemo(): void {

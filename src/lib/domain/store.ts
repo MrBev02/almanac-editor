@@ -25,4 +25,6 @@ export interface Store {
 	writeJson(path: string, doc: unknown, sha: string, message: string): Promise<string>;
 	/** Writes a new file; refuses with ConflictError if one is already there. */
 	createJson(path: string, doc: unknown, message: string): Promise<string>;
+	/** The commit the files are at, where they are in git through the store; else null. */
+	head(): Promise<string | null>;
 }

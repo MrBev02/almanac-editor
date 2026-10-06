@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import Icon from './Icon.svelte';
 	import Lane from './Lane.svelte';
 	import {
@@ -14,8 +15,15 @@
 	let {
 		lesson,
 		registry,
-		content
-	}: { lesson: Lesson; registry: Map<string, RegistryEntry>; content: string | null } = $props();
+		content,
+		feedback
+	}: {
+		lesson: Lesson;
+		registry: Map<string, RegistryEntry>;
+		content: string | null;
+		/** Feedback from the delivery records, for the margin. */
+		feedback?: Snippet;
+	} = $props();
 
 	const t = $derived(timing(lesson));
 	const starts = $derived(startTimes(lesson.sections.map((s) => s.duration_minutes)));
@@ -153,22 +161,7 @@
 			{:else}<p class="muted">No dot points linked.</p>{/if}
 		</section>
 
-		<section class="feedback">
-			<h2>Feedback for next time</h2>
-			{#if lesson.feedback?.length}
-				<ul>
-					{#each lesson.feedback as f, i (i)}
-						<li>
-							<p>{f.issue}</p>
-							{#if f.change}<p class="change"><strong>Change:</strong> {f.change}</p>{/if}
-							{#if f.offering}<span class="by">{f.offering}</span>{/if}
-						</li>
-					{/each}
-				</ul>
-			{:else}
-				<p class="muted">Nothing logged. After teaching it, note what to change.</p>
-			{/if}
-		</section>
+		{#if feedback}<div>{@render feedback()}</div>{/if}
 
 		{#if lesson.resources?.length}
 			<section>
@@ -447,12 +440,11 @@
 		font-stretch: 90%;
 	}
 
-	.margin section + section {
+	.margin > * + * {
 		margin-top: 28px;
 	}
 
 	.dots,
-	.feedback ul,
 	.res {
 		list-style: none;
 		padding: 0;
@@ -493,35 +485,6 @@
 		font-size: 13px;
 		color: var(--ink-2);
 		font-style: italic;
-	}
-
-	.feedback li {
-		background: var(--paper);
-		color: var(--ink);
-		padding: 12px 14px 12px 16px;
-		font-size: 14px;
-		border-top: 3px solid var(--house);
-	}
-
-	.feedback li p {
-		margin: 0;
-	}
-
-	.feedback .change {
-		margin-top: 8px;
-		color: var(--ink-2);
-	}
-
-	.feedback .change strong {
-		color: var(--house-deep);
-	}
-
-	.by {
-		display: inline-block;
-		margin-top: 6px;
-		font-size: 12px;
-		font-weight: 700;
-		color: var(--muted);
 	}
 
 	.res li {

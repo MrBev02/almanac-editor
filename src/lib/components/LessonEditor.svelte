@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { beforeNavigate } from '$app/navigation';
 	import Icon from './Icon.svelte';
 	import Lane from './Lane.svelte';
@@ -11,7 +12,6 @@
 	} from '#lib/domain/lessonView.ts';
 	import {
 		DIFFERENTIATION_KEYS,
-		blankFeedback,
 		blankSection,
 		fromDraft,
 		move,
@@ -36,7 +36,8 @@
 		hasContent,
 		viewHref,
 		onsaved,
-		onreload
+		onreload,
+		feedback
 	}: {
 		path: string;
 		lesson: Lesson;
@@ -49,6 +50,8 @@
 		onsaved: (lesson: Lesson, sha: string) => void;
 		/** Throws away the loaded plan and reads the file again. */
 		onreload: () => void;
+		/** Open feedback from the delivery records, for the margin. */
+		feedback?: Snippet;
 	} = $props();
 
 	// The editor works on a copy taken when it opens; a save makes the saved plan the new baseline.
@@ -298,33 +301,7 @@
 	</div>
 
 	<aside class="margin" aria-label="Syllabus, feedback and resources">
-		<section id="feedback">
-			<h2>Feedback for next time</h2>
-			{#each draft.feedback as f, i (i)}
-				<fieldset class="fb">
-					<legend class="sr-only">Feedback {i + 1}</legend>
-					<label class="field"
-						><span>What happened</span><textarea bind:value={f.issue}></textarea></label
-					>
-					<label class="field"
-						><span>Change next time</span><textarea bind:value={f.change}></textarea></label
-					>
-					<label class="field"
-						><span>Raised by class (optional)</span><input
-							type="text"
-							bind:value={f.offering}
-							placeholder="Offering id"
-						/></label
-					>
-					<button type="button" class="quiet" onclick={() => draft.feedback.splice(i, 1)}>
-						<Icon name="bin" size={16} /> Remove
-					</button>
-				</fieldset>
-			{/each}
-			<button type="button" class="add" onclick={() => draft.feedback.push(blankFeedback())}>
-				<Icon name="plus" size={16} /> Add feedback
-			</button>
-		</section>
+		{#if feedback}<div class="slot">{@render feedback()}</div>{/if}
 
 		<section>
 			<h2>Syllabus</h2>
@@ -604,7 +581,7 @@
 		padding-top: 18px;
 	}
 
-	.margin section:first-child {
+	.margin > section:first-child {
 		margin-top: 0;
 	}
 
@@ -616,13 +593,6 @@
 	.hint {
 		font-size: 13px;
 		color: var(--muted);
-	}
-
-	.fb {
-		background: var(--paper);
-		border-top: 3px solid var(--house);
-		padding: 14px 14px 10px;
-		margin-bottom: 10px;
 	}
 
 	.dot {

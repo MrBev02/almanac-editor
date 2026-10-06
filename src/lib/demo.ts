@@ -9,6 +9,7 @@
  */
 
 import { decodeBase64, encodeBase64, type RepoTarget } from './domain/repo.ts';
+import type { DeliveryRecord } from './domain/deliveries.ts';
 import type { Kind, Lesson, Offering, Tier, Unit } from './domain/types.ts';
 
 export const DEMO_TARGET: RepoTarget = { owner: 'sample', repo: 'almanac', branch: 'main' };
@@ -39,8 +40,7 @@ function lesson(
 		curriculum_links: more.curriculum_links ?? [],
 		...(more.assessment ? { assessment: more.assessment } : {}),
 		...(more.differentiation ? { differentiation: more.differentiation } : {}),
-		...(more.resources ? { resources: more.resources } : {}),
-		...(more.feedback ? { feedback: more.feedback } : {})
+		...(more.resources ? { resources: more.resources } : {})
 	};
 }
 
@@ -153,13 +153,6 @@ const productLessons: Record<string, Lesson> = {
 					notes: 'Bottle opener, peeler, two pens, a stapler and a phone stand.'
 				},
 				{ name: 'Good design slides', canvas: 'good_design_slides' }
-			],
-			feedback: [
-				{
-					issue: 'Ranking ran long; groups argued about the stapler for ten minutes.',
-					change: 'Give each group a two-minute timer per object.',
-					offering: '2026-y7-class-a'
-				}
 			]
 		}
 	),
@@ -249,13 +242,7 @@ const productLessons: Record<string, Lesson> = {
 		{
 			learning_intentions: ['Use a quick model to test an idea'],
 			success_criteria: ['My prototype is the right size for the user'],
-			curriculum_links: [link('DT-4.3', 'partial', 'introduced')],
-			feedback: [
-				{
-					issue: 'Pack up took far longer than five minutes.',
-					change: 'Start pack up with ten minutes left.'
-				}
-			]
+			curriculum_links: [link('DT-4.3', 'partial', 'introduced')]
 		}
 	),
 	'05_test_and_evaluate': lesson(
@@ -477,6 +464,80 @@ const offerings: Record<string, Offering> = {
 	}
 };
 
+/**
+ * What the classes were taught, by record path. The plans are left out of the
+ * snapshots here to keep the sample short; the app writes them in full.
+ */
+const deliveries: Record<string, DeliveryRecord> = {
+	'offerings/2025_y07_class_a/taught/units/product_design/lessons/01_what_makes_good_design.json': {
+		offering: '2025-y7-class-a',
+		lesson: 'units/product_design/lessons/01_what_makes_good_design.json',
+		deliveries: [
+			{
+				taught: '2025-05-06',
+				by: 'Sample Teacher',
+				feedback: [
+					{
+						issue: 'The bottle opener hook took over; nobody wanted to put it down.',
+						change: 'Collect the opener before the talk starts.',
+						status: 'applied',
+						raised: '2025-05-06',
+						resolved: '2025-05-20',
+						note: 'Added to the hook section.'
+					},
+					{
+						issue: 'Two groups had the same six objects and copied each other.',
+						status: 'declined',
+						raised: '2025-05-06',
+						resolved: '2025-05-20',
+						note: 'Only one box of objects; not worth a second.'
+					}
+				]
+			}
+		]
+	},
+	'offerings/2026_y07_class_a/taught/units/product_design/lessons/01_what_makes_good_design.json': {
+		offering: '2026-y7-class-a',
+		lesson: 'units/product_design/lessons/01_what_makes_good_design.json',
+		deliveries: [
+			{
+				taught: '2026-02-10',
+				by: 'Sample Teacher',
+				deviations: 'Fire drill in the middle; skipped the stretch task.',
+				feedback: [
+					{
+						issue: 'Ranking ran long; groups argued about the stapler for ten minutes.',
+						change: 'Give each group a two-minute timer per object.',
+						status: 'open',
+						raised: '2026-02-10'
+					}
+				]
+			}
+		]
+	},
+	'offerings/2026_y07_class_a/taught/units/product_design/lessons/02_writing_a_brief.json': {
+		offering: '2026-y7-class-a',
+		lesson: 'units/product_design/lessons/02_writing_a_brief.json',
+		deliveries: [{ taught: '2026-02-12', by: 'Sample Teacher' }]
+	},
+	'offerings/2026_unattributed/taught/units/product_design/lessons/04_cardboard_prototypes.json': {
+		offering: null,
+		lesson: 'units/product_design/lessons/04_cardboard_prototypes.json',
+		deliveries: [
+			{
+				source: 'migrated from lesson feedback',
+				feedback: [
+					{
+						issue: 'Pack up took far longer than five minutes.',
+						change: 'Start pack up with ten minutes left.',
+						status: 'open'
+					}
+				]
+			}
+		]
+	}
+};
+
 const LESSON_SCHEMA = {
 	$schema: 'https://json-schema.org/draft/2020-12/schema',
 	type: 'object',
@@ -510,6 +571,7 @@ function files(): Map<string, string> {
 	unit('subjects/design_tech/units/simple_circuits', circuits, circuitLessons);
 	unit('subjects/media_arts/units/stop_motion', stopMotion, stopMotionLessons);
 	for (const [path, doc] of Object.entries(offerings)) put(path, doc);
+	for (const [path, doc] of Object.entries(deliveries)) put(path, doc);
 	put('schemas/lesson.schema.json', LESSON_SCHEMA);
 	out.set(
 		'subjects/design_tech/units/product_design/lessons/01_what_makes_good_design.md',
@@ -524,6 +586,9 @@ export function demoFetch(): typeof fetch {
 	let next = 0;
 	const shaOf = () => `sample${(next += 1)}`;
 	const shas = new Map<string, string>([...store.keys()].map((p) => [p, shaOf()]));
+	// Commits are hex, as a delivery's plan_commit must be.
+	let commits = 0xa1b2c3d;
+	const head = () => commits.toString(16);
 	const json = (body: unknown, status = 200) =>
 		new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
@@ -537,6 +602,7 @@ export function demoFetch(): typeof fetch {
 				tree: [...shas].map(([p, sha]) => ({ path: p, sha, type: 'blob' }))
 			});
 		}
+		if (path === '/git/ref/heads/main') return json({ object: { sha: head() } });
 		if (path.startsWith('/git/blobs/')) {
 			const sha = url.pathname.split('/git/blobs/')[1];
 			const file = [...shas].find(([, s]) => s === sha)?.[0];
@@ -550,7 +616,8 @@ export function demoFetch(): typeof fetch {
 			store.set(file, decodeBase64(body.content));
 			const sha = shaOf();
 			shas.set(file, sha);
-			return json({ content: { sha } });
+			commits += 1;
+			return json({ content: { sha }, commit: { sha: head() } });
 		}
 		return json({ message: 'Not Found' }, 404);
 	};

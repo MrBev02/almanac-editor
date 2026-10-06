@@ -16,7 +16,7 @@
  */
 
 import { normaliseText } from './format.ts';
-import type { CurriculumLink, Feedback, Kind, Lesson, Resource, Section, Tier } from './types.ts';
+import type { CurriculumLink, Kind, Lesson, Resource, Section, Tier } from './types.ts';
 
 /** Original key order of a list item, carried through the draft so a moved item keeps it. */
 type Keyed = { __keys?: string[] };
@@ -30,7 +30,6 @@ export type SectionDraft = {
 } & Keyed;
 export type LinkDraft = CurriculumLink & { note: string } & Keyed;
 export type ResourceDraft = Resource & { notes: string } & Keyed;
-export type FeedbackDraft = { issue: string; change: string; offering: string } & Keyed;
 
 export const DIFFERENTIATION_KEYS = [
 	'support',
@@ -53,7 +52,6 @@ export interface LessonDraft {
 	assessment: { formative: string; evidence: string[] };
 	differentiation: Record<DifferentiationKey, string>;
 	resources: ResourceDraft[];
-	feedback: FeedbackDraft[];
 }
 
 /** Schema order, for placing keys a file did not already have. */
@@ -69,13 +67,11 @@ export const LESSON_ORDER = [
 	'assessment',
 	'differentiation',
 	'resources',
-	'feedback',
 	'materials'
 ];
 const SECTION_ORDER = ['label', 'section', 'duration_minutes', 'kind', 'tier'];
 const LINK_ORDER = ['framework', 'id', 'coverage', 'mode', 'note'];
 const RESOURCE_ORDER = ['name', 'url', 'canvas', 'file', 'notes'];
-const FEEDBACK_ORDER = ['issue', 'change', 'offering'];
 const ASSESSMENT_ORDER = ['formative', 'evidence'];
 
 export class EditError extends Error {}
@@ -113,22 +109,12 @@ export function toDraft(lesson: Lesson): LessonDraft {
 			...r,
 			notes: r.notes ?? '',
 			__keys: Object.keys(r)
-		})),
-		feedback: (lesson.feedback ?? []).map((f) => ({
-			issue: f.issue ?? '',
-			change: f.change ?? '',
-			offering: f.offering ?? '',
-			__keys: Object.keys(f)
 		}))
 	};
 }
 
 export function blankSection(): SectionDraft {
 	return { label: '', section: '', duration_minutes: 5, tier: '', kind: '' };
-}
-
-export function blankFeedback(): FeedbackDraft {
-	return { issue: '', change: '', offering: '' };
 }
 
 export function sectionTotal(draft: Pick<LessonDraft, 'sections'>): number {
@@ -191,11 +177,6 @@ export function fromDraft(original: Lesson, draft: LessonDraft): Lesson {
 	);
 
 	set('resources', resourcesFrom(original.resources ?? [], draft.resources), true);
-	set(
-		'feedback',
-		draft.feedback.map((f) => feedbackFrom(f)),
-		true
-	);
 
 	return ordered(out, Object.keys(original), LESSON_ORDER) as Lesson;
 }
@@ -234,13 +215,6 @@ function resourcesFrom(original: Resource[], drafts: ResourceDraft[]): Resource[
 		setField(item, original[i], 'notes', text(d.notes), true);
 		return ordered(item, d.__keys, RESOURCE_ORDER) as unknown as Resource;
 	});
-}
-
-function feedbackFrom(f: FeedbackDraft): Feedback {
-	const item: Record<string, unknown> = { issue: text(f.issue) };
-	put(item, 'change', text(f.change));
-	put(item, 'offering', text(f.offering));
-	return ordered(item, f.__keys, FEEDBACK_ORDER) as unknown as Feedback;
 }
 
 function text(value: string | null | undefined): string {

@@ -9,6 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join as joinFs, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { feedbackEntries, lessonRef, recordPaths, type DeliveryRecord } from './deliveries.ts';
 import { dump } from './format.ts';
 import { unitDirs } from './layout.ts';
 import { fromDraft, toDraft } from './lessonEdit.ts';
@@ -34,10 +35,11 @@ describe.skipIf(!root)('real data repo', () => {
 	const files = walk(joinFs(repo, 'subjects'))
 		.concat(walk(joinFs(repo, 'offerings')))
 		.filter((f) => f.endsWith('.json'))
-		.map((f) => relative(repo, f));
+		.map((f) => relative(repo, f).replaceAll('\\', '/'));
 	const read = (rel: string) => readFileSync(joinFs(repo, rel), 'utf-8');
-	const lessons = files.filter((f) => /\/lessons\/.*\.json$/.test(f));
-	const offerings = files.filter((f) => f.startsWith('offerings/'));
+	const lessons = files.filter((f) => /^subjects\/.*\/lessons\/.*\.json$/.test(f));
+	const records = files.filter((f) => /^offerings\/[^/]+\/taught\//.test(f));
+	const offerings = files.filter((f) => /^offerings\/[^/]+\.json$/.test(f));
 	const schemas = new Schemas(
 		Object.fromEntries(
 			readdirSync(joinFs(repo, 'schemas'))
@@ -74,6 +76,46 @@ describe.skipIf(!root)('real data repo', () => {
 			.map((f) => [f, schemas.validate('offering.schema.json', JSON.parse(read(f)))] as const)
 			.filter(([, problems]) => problems.length > 0);
 		expect(invalid).toEqual([]);
+	});
+
+	it('finds every delivery record valid against the repo schema', () => {
+		const invalid = records
+			.map((f) => [f, schemas.validate('delivery.schema.json', JSON.parse(read(f)))] as const)
+			.filter(([, problems]) => problems.length > 0);
+		expect(invalid).toEqual([]);
+	});
+
+	it('lists open feedback as scripts/deliveries.py does', () => {
+		const python = `
+import json, sys
+from pathlib import Path
+sys.path.insert(0, "scripts")
+from deliveries import open_feedback
+out = {}
+for lesson in sorted(Path("subjects").glob("**/lessons/**/*.json")):
+    items = open_feedback(lesson)
+    if items:
+        out[lesson.as_posix()] = [[i["offering"], i["taught"], i["issue"]] for i in items]
+print(json.dumps(out))
+`;
+		const expected: Record<string, [string | null, string | null, string][]> = JSON.parse(
+			execFileSync('python3', ['-c', python], { cwd: repo, encoding: 'utf-8' })
+		);
+		const offeringDocs = new Map(offerings.map((f) => [f, JSON.parse(read(f)) as Offering]));
+		const actual: typeof expected = {};
+		for (const lesson of lessons) {
+			const at = lessonRef(lesson);
+			if (!at) continue;
+			const held = recordPaths(records, at.ref).filter(({ offeringPath, unattributed }) => {
+				const offering = offeringDocs.get(offeringPath);
+				return offering ? offering.subject === at.subject : unattributed;
+			});
+			const open = feedbackEntries(
+				held.map(({ path }) => ({ path, record: JSON.parse(read(path)) as DeliveryRecord }))
+			).filter((e) => e.item.status === 'open');
+			if (open.length) actual[lesson] = open.map((e) => [e.offering, e.taught, e.item.issue]);
+		}
+		expect(actual).toEqual(expected);
 	});
 
 	it('sets and clears a colour on every offering, valid and byte for byte', () => {

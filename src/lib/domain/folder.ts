@@ -121,6 +121,11 @@ export class FolderStore implements Store {
 		return sha;
 	}
 
+	/** A folder is never read through git, even when it is a clone. */
+	async head(): Promise<null> {
+		return null;
+	}
+
 	private async write(handle: FolderFile, doc: unknown): Promise<string> {
 		const text = dump(doc);
 		const writer = await handle.createWritable();

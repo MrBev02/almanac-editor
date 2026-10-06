@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { dump } from './format.ts';
 import {
-	blankFeedback,
 	blankSection,
 	EditError,
 	fromDraft,
@@ -53,13 +52,11 @@ describe('fromDraft', () => {
 		expect(keys.slice(0, 4)).toEqual(['title', 'description', 'summary', 'duration_minutes']);
 	});
 
-	it('adds feedback after resources and before materials', () => {
-		const saved = save((d) => {
-			d.feedback.push({ ...blankFeedback(), issue: 'Too few socks.' });
-		});
-		const keys = Object.keys(saved);
-		expect(keys.indexOf('feedback')).toBe(keys.indexOf('resources') + 1);
-		expect(saved.feedback).toEqual([{ issue: 'Too few socks.' }]);
+	it('carries lesson feedback from an older file through untouched', () => {
+		// Feedback now lives on delivery records; a plan that still has it keeps it.
+		const older = { ...lesson(), feedback: [{ issue: 'Too few socks.' }] };
+		const saved = fromDraft(older, toDraft(older));
+		expect(dump(saved)).toBe(dump(older));
 	});
 
 	it('keeps each section key order through a move', () => {
