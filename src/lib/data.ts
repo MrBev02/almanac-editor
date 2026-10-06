@@ -6,8 +6,19 @@
  */
 
 import type { Schema } from '@cfworker/json-schema';
+import {
+	deliveryPath,
+	lessonRef,
+	newDelivery,
+	recordPaths,
+	resolveFeedback,
+	withDelivery,
+	type DeliveryRecord,
+	type Resolution,
+	type TaughtInput
+} from './domain/deliveries.ts';
 import { contentPath, offeringPaths, schemaPaths, unitDirs } from './domain/layout.ts';
-import { basename, join } from './domain/paths.ts';
+import { basename, join, normalise, stem } from './domain/paths.ts';
 import { withColour } from './domain/offeringEdit.ts';
 import { offeringPath } from './domain/newOffering.ts';
 import { byNumber } from './house.ts';
@@ -19,6 +30,16 @@ import { Schemas } from './domain/validate.ts';
 export interface UnitEntry {
 	dir: string;
 	unit: Unit;
+}
+
+/** One class's delivery record for a lesson, as read. */
+export interface HeldRecord {
+	path: string;
+	sha: string;
+	record: DeliveryRecord;
+	/** The offering file the record sits beside; null for an unattributed one. */
+	offeringPath: string | null;
+	offering: Offering | null;
 }
 
 export class Data {
@@ -113,6 +134,88 @@ export class Data {
 		const path = contentPath(lessonPath);
 		if (!(await this.store.has(path))) return null;
 		return (await this.store.readText(path)).doc;
+	}
+
+	/**
+	 * Every class's record for one lesson, in class-directory order. Reads
+	 * only the files at the lesson's own path under each `taught/`, as
+	 * `lesson_deliveries` in the data repo's `scripts/deliveries.py` does: a
+	 * class whose offering teaches another subject is skipped, and an
+	 * unattributed directory matches on path alone.
+	 */
+	async deliveries(lessonPath: string): Promise<HeldRecord[]> {
+		const at = lessonRef(lessonPath);
+		if (!at) return [];
+		const [paths, offerings] = await Promise.all([this.store.paths(), this.offerings()]);
+		type Found = Omit<HeldRecord, 'sha' | 'record'>;
+		const found = recordPaths(paths.keys(), at.ref).flatMap(
+			({ path, offeringPath, unattributed }): Found[] => {
+				const offering = offerings.find(([p]) => p === offeringPath)?.[1] ?? null;
+				if (offering) {
+					return normalise(offering.subject ?? '') === normalise(at.subject)
+						? [{ path, offeringPath, offering }]
+						: [];
+				}
+				return unattributed ? [{ path, offeringPath: null, offering: null }] : [];
+			}
+		);
+		return Promise.all(
+			found.map(async (f) => {
+				const { doc, sha } = await this.store.readJson<DeliveryRecord>(f.path);
+				return { ...f, sha, record: doc };
+			})
+		);
+	}
+
+	/**
+	 * Records one class's delivery of a lesson, in one write: appended to the
+	 * class's record, or a new record for its first. `plan` is the lesson as
+	 * it stands. Throws ConflictError if the record changed since it was read
+	 * (or appeared meanwhile), and an Error listing the problems if the
+	 * schema refuses it.
+	 */
+	async markTaught(
+		offeringPath: string,
+		offering: Offering,
+		lessonPath: string,
+		plan: Lesson,
+		input: TaughtInput
+	): Promise<void> {
+		const at = lessonRef(lessonPath);
+		if (!at) throw new Error(`${lessonPath} is not under a units/ directory.`);
+		const path = deliveryPath(offeringPath, at.ref);
+		const delivery = newDelivery(input, plan, await this.store.head());
+		const message = `Taught ${stem(lessonPath)} to ${offering.id}`;
+		if (await this.store.has(path)) {
+			const { doc, sha } = await this.store.readJson<DeliveryRecord>(path);
+			const next = withDelivery(doc, offering.id, at.ref, delivery);
+			await this.check('delivery.schema.json', next, 'record');
+			await this.store.writeJson(path, next, sha, message);
+		} else {
+			const next = withDelivery(null, offering.id, at.ref, delivery);
+			await this.check('delivery.schema.json', next, 'record');
+			await this.store.createJson(path, next, message);
+		}
+	}
+
+	/**
+	 * Applies or declines feedback in one record. Throws ConflictError if the
+	 * record changed since `held` was read.
+	 */
+	async resolve(held: HeldRecord, resolutions: Resolution[], message: string): Promise<void> {
+		const next = resolveFeedback(held.record, resolutions);
+		await this.check('delivery.schema.json', next, 'record');
+		await this.store.writeJson(held.path, next, held.sha, message);
+	}
+
+	/** Throws the schema's problems, if the files include it; a folder without schemas/ saves unchecked. */
+	private async check(name: string, doc: unknown, what: string): Promise<void> {
+		const schemas = await this.schemas();
+		if (!schemas.has(name)) return;
+		const problems = schemas.validate(name, doc);
+		if (problems.length) {
+			throw new Error(problems.map((p) => `${p.path || what}: ${p.message}`).join('; '));
+		}
 	}
 
 	schemas(): Promise<Schemas> {

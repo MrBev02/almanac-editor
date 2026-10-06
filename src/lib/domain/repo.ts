@@ -150,6 +150,15 @@ export class Repo implements Store {
 		return this.put(path, doc, message);
 	}
 
+	/** The branch's head commit, read fresh each time so a delivery names the latest. */
+	async head(): Promise<string> {
+		const response = await this.request(
+			`${this.base}/git/ref/heads/${encodePath(this.target.branch)}`
+		);
+		const body: { object: { sha: string } } = await response.json();
+		return body.object.sha;
+	}
+
 	private async put(path: string, doc: unknown, message: string, sha?: string): Promise<string> {
 		const text = dump(doc);
 		const response = await this.request(`${this.base}/contents/${encodePath(path)}`, {

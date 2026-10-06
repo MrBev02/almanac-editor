@@ -36,6 +36,7 @@ src/lib/domain/   plain TypeScript, no Svelte, unit-tested
   format.ts       dump(): the house JSON format
   lessonEdit.ts   toDraft / fromDraft: editing without disturbing the file
   offerings.ts    port of the data repo's scripts/offering_lessons.py
+  deliveries.ts   delivery records: what a class was taught, and its feedback
   offeringEdit.ts withColour(): the one field the editor changes on an offering
   newOffering.ts  copyOffering / blankOffering: a new class, and its id and path
   layout.ts       where units, offerings, schemas and content files are
@@ -58,8 +59,8 @@ src/lib/components/, src/routes/   UI
   - An optional field cleared to empty is removed, unless the file already held
     it empty.
   - Check against a real clone with `DATA_REPO=../subject-almanac npm test`.
-    Run it after any change to `format.ts`, `lessonEdit.ts`, `offeringEdit.ts`
-    or `offerings.ts`.
+    Run it after any change to `format.ts`, `lessonEdit.ts`, `offeringEdit.ts`,
+    `offerings.ts` or `deliveries.ts`.
 - **The editor never touches** a plan's `materials` (derived; the data repo's
   `materials.yml` Action regenerates it), curriculum link
   id/coverage/mode/framework, or a resource's url/canvas/file.
@@ -67,8 +68,13 @@ src/lib/components/, src/routes/   UI
   `schemas/` (a folder without them saves unchecked), read at run time, through
   `@cfworker/json-schema`. Not Ajv: Ajv compiles with `new Function`, which the
   CSP blocks. Don't add `'unsafe-eval'`.
-- **Duplicated logic.** `offerings.ts` duplicates Python in the data repo. The
-  `DATA_REPO` parity test compares them; keep it passing.
+- **Duplicated logic.** `offerings.ts` and `deliveries.ts` duplicate Python in
+  the data repo (`offering_lessons.py`, `deliveries.py`). The `DATA_REPO`
+  parity tests compare them; keep them passing.
+- **Feedback lives on delivery records**
+  (`offerings/<class>/taught/<lesson path>.json`), never on the lesson. Items
+  are applied or declined, never deleted. Read a lesson's records on demand,
+  never every record on every page.
 
 ## Security
 

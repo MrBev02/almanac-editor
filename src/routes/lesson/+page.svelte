@@ -2,10 +2,15 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import Failure from '#lib/components/Failure.svelte';
+	import FeedbackList from '#lib/components/FeedbackList.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import LessonEditor from '#lib/components/LessonEditor.svelte';
 	import LessonView from '#lib/components/LessonView.svelte';
 	import PageHead from '#lib/components/PageHead.svelte';
+	import ResolveDialog from '#lib/components/ResolveDialog.svelte';
+	import TaughtDialog from '#lib/components/TaughtDialog.svelte';
+	import type { HeldRecord } from '#lib/data.ts';
+	import { formatDate } from '#lib/domain/deliveries.ts';
 	import { lessonRefs, OfferingMismatch } from '#lib/domain/offerings.ts';
 	import { join, stem } from '#lib/domain/paths.ts';
 	import type { Lesson } from '#lib/domain/types.ts';
@@ -44,7 +49,7 @@
 			for (const ref of [refs[at + 1], refs[at - 1]]) {
 				if (ref) data.lesson(join(u, ref)).catch(() => {});
 			}
-			return { unit, loaded, content, schemas, refs, registry, offering, store: data.store };
+			return { unit, loaded, content, schemas, refs, registry, offering, store: data.store, data };
 		})();
 	});
 
@@ -69,6 +74,57 @@
 			.catch(() => {});
 	});
 
+	// Every class's delivery records for this lesson, read apart from the plan so the page never waits on them.
+	let held = $state.raw<HeldRecord[] | null>(null);
+	let heldError = $state<unknown>(null);
+	let heldRevision = $state(0);
+	$effect(() => {
+		const data = session.data;
+		const at = path;
+		void session.revision;
+		void heldRevision;
+		held = null;
+		heldError = null;
+		if (!data || !at) return;
+		let current = true;
+		data
+			.deliveries(at)
+			.then((found) => current && (held = found))
+			.catch((error) => current && (heldError = error));
+		return () => (current = false);
+	});
+	const hasOpen = (records: HeldRecord[] | null) =>
+		!!records?.some((h) =>
+			h.record.deliveries.some((d) => d.feedback?.some((f) => f.status === 'open'))
+		);
+	// The last time this class had the lesson, when the page is in a class's context.
+	const lastTaught = $derived(
+		held
+			?.find((h) => h.offeringPath === o)
+			?.record.deliveries.map((d) => d.taught)
+			.filter(Boolean)
+			.at(-1) ?? null
+	);
+
+	let marking = $state(false);
+	let resolving = $state(false);
+	let afterSave = $state<{ commit: string | null } | null>(null);
+
+	/** After a plan is saved, asks which open feedback the change dealt with. */
+	async function askAfterSave() {
+		const data = session.data;
+		if (!data) return;
+		try {
+			const [commit, found] = await Promise.all([data.store.head(), data.deliveries(path)]);
+			held = found;
+			if (!hasOpen(found)) return;
+			afterSave = { commit };
+			resolving = true;
+		} catch {
+			// The plan is saved; feedback can still be closed from the lesson's margin.
+		}
+	}
+
 	function onkeydown(event: KeyboardEvent) {
 		if (editing || event.ctrlKey || event.metaKey || event.altKey) return;
 		const target = event.target as HTMLElement;
@@ -76,6 +132,11 @@
 		if (event.key === 'j' && neighbours.next) goto(neighbours.next);
 		else if (event.key === 'k' && neighbours.prev) goto(neighbours.prev);
 		else if (event.key === 'e') goto(links.lesson(u, l, o, t, true));
+		else if (event.key === 't' && o) {
+			// The panel focuses a text box; the key must not land in it.
+			event.preventDefault();
+			marking = true;
+		}
 	}
 </script>
 
@@ -88,7 +149,7 @@
 	{#await load}
 		<PageHead title={null} />
 		<div class="page"><div class="loading"><span></span><span></span><span></span></div></div>
-	{:then { unit, loaded, content, schemas, refs, registry, offering, store }}
+	{:then { unit, loaded, content, schemas, refs, registry, offering, store, data }}
 		{@const current = saved?.path === path ? saved : { path, lesson: loaded.doc, sha: loaded.sha }}
 		{@const index = refs.indexOf(l)}
 		{@const prev = index > 0 ? links.lesson(u, refs[index - 1], o, t) : null}
@@ -123,6 +184,11 @@
 					>
 						<Icon name="right" />
 					</a>
+					{#if offering && o}
+						<button type="button" onclick={() => (marking = true)} title="Mark as taught (T)">
+							<Icon name="check" size={16} /> Mark as taught
+						</button>
+					{/if}
 					<a class="btn solid" href={links.lesson(u, l, o, t, true)} title="Edit (E)">
 						<Icon name="pencil" size={16} /> Edit
 					</a>
@@ -132,6 +198,7 @@
 				{#if index >= 0}<span>Lesson {index + 1} of {refs.length}</span>{/if}
 				<span>{current.lesson.duration_minutes} minutes</span>
 				<span class="file">{stem(l)}</span>
+				{#if offering && lastTaught}<span>Taught {formatDate(lastTaught)}</span>{/if}
 				{#if editing}<span>Editing</span>{/if}
 			{/snippet}
 		</PageHead>
@@ -148,16 +215,34 @@
 						{store}
 						hasContent={content !== null}
 						viewHref={links.lesson(u, l, o, t)}
-						onsaved={(lesson, sha) => (saved = { path, lesson, sha })}
+						onsaved={(lesson, sha) => {
+							saved = { path, lesson, sha };
+							askAfterSave();
+						}}
 						onreload={() => {
 							store.refresh();
 							saved = null;
 							session.revision += 1;
 						}}
-					/>
+					>
+						{#snippet feedback()}
+							<FeedbackList {held} error={heldError} />
+						{/snippet}
+					</LessonEditor>
 				{/key}
 			{:else}
-				<LessonView lesson={current.lesson} {registry} {content} />
+				<LessonView lesson={current.lesson} {registry} {content}>
+					{#snippet feedback()}
+						<FeedbackList
+							{held}
+							error={heldError}
+							onclose={() => {
+								afterSave = null;
+								resolving = true;
+							}}
+						/>
+					{/snippet}
+				</LessonView>
 
 				<nav class="pager" aria-label="Lessons in order">
 					{#if prev}
@@ -175,6 +260,30 @@
 				</nav>
 			{/if}
 		</div>
+
+		{#if offering && o}
+			<TaughtDialog
+				bind:open={marking}
+				{data}
+				offeringPath={o}
+				{offering}
+				lessonPath={path}
+				lesson={current.lesson}
+				onsaved={() => (heldRevision += 1)}
+			/>
+		{/if}
+		{#if held}
+			<ResolveDialog
+				bind:open={resolving}
+				{data}
+				lessonPath={path}
+				{held}
+				commit={afterSave?.commit ?? null}
+				afterSave={afterSave !== null}
+				onsaved={() => (heldRevision += 1)}
+				onreload={() => (heldRevision += 1)}
+			/>
+		{/if}
 	{:catch error}
 		<PageHead title="Could not open this lesson" />
 		<div class="page"><Failure {error} /></div>

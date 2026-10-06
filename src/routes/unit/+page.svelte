@@ -3,6 +3,7 @@
 	import Failure from '#lib/components/Failure.svelte';
 	import Lane from '#lib/components/Lane.svelte';
 	import PageHead from '#lib/components/PageHead.svelte';
+	import { formatDate } from '#lib/domain/deliveries.ts';
 	import { timing } from '#lib/domain/lessonView.ts';
 	import { lessonRefs, offeringEntries } from '#lib/domain/offerings.ts';
 	import { join } from '#lib/domain/paths.ts';
@@ -40,6 +41,35 @@
 				houses: houseMap(offerings)
 			};
 		})();
+	});
+
+	/**
+	 * Per lesson: open feedback from every class's records, and when this class
+	 * last had it. Read after the lessons, only for the lessons shown, so the
+	 * list never waits on them.
+	 */
+	const marks = $derived.by(() => {
+		const data = session.data;
+		const pending = load;
+		if (!data || !pending) return null;
+		return pending.then(({ lessons }) =>
+			Promise.all(
+				lessons.map(async ({ ref }) => {
+					const held = await data.deliveries(join(u, ref)).catch(() => []);
+					const open = held
+						.flatMap((h) => h.record.deliveries)
+						.flatMap((d) => d.feedback ?? [])
+						.filter((f) => f.status === 'open').length;
+					const taught =
+						held
+							.find((h) => o && h.offeringPath === o)
+							?.record.deliveries.map((d) => d.taught)
+							.filter(Boolean)
+							.at(-1) ?? null;
+					return [ref, { open, taught }] as const;
+				})
+			).then((rows) => new Map(rows))
+		);
 	});
 </script>
 
@@ -109,9 +139,15 @@
 													: `${tm.nominal - tm.total} min spare`}
 											</strong>
 										{/if}
-										{#if lesson.feedback?.length}
-											<span class="fb">· {lesson.feedback.length} feedback</span>
-										{/if}
+										{#await marks then found}
+											{@const mark = found?.get(ref)}
+											{#if mark?.taught}
+												<span class="taught">· Taught {formatDate(mark.taught)}</span>
+											{/if}
+											{#if mark?.open}
+												<span class="fb">· {mark.open} feedback</span>
+											{/if}
+										{/await}
 									</span>
 								</span>
 								<span class="bar"
@@ -299,6 +335,11 @@
 
 	.fb {
 		color: var(--note-deep);
+		font-weight: 600;
+	}
+
+	.taught {
+		color: var(--house-deep);
 		font-weight: 600;
 	}
 
