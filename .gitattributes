@@ -1,0 +1,12 @@
+# Line endings are LF, in the repository and in the working tree.
+#
+# Everything tracked is already LF in the index, and the byte-exact tests
+# compare files against what Python's json.dumps writes, which is LF. Windows
+# checkouts with core.autocrlf=true were converting files to CRLF on the way
+# out, which failed those tests and Prettier's check. Pinning eol=lf removes
+# the conversion, as the data repo does.
+* text=auto eol=lf
+
+*.woff2 binary
+*.png   binary
+*.ico   binary
