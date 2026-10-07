@@ -75,9 +75,10 @@
 	});
 
 	function onkeydown(event: KeyboardEvent) {
-		if (event.key !== 'n' || event.ctrlKey || event.metaKey || event.altKey || !u) return;
+		if (event.ctrlKey || event.metaKey || event.altKey || !u) return;
 		if ((event.target as HTMLElement).closest('input, textarea, select, dialog[open]')) return;
-		goto(links.newLesson(u, o, t));
+		if (event.key === 'n') goto(links.newLesson(u, o, t));
+		else if (event.key === 'e') goto(links.unitEdit(u, o, t));
 	}
 </script>
 
@@ -103,6 +104,9 @@
 			lede={unit.description}
 		>
 			{#snippet actions()}
+				<a class="btn" href={links.unitEdit(u, o, t)} title="Edit unit (E)">
+					<Icon name="pencil" size={16} /> Edit unit
+				</a>
 				<a class="btn solid" href={links.newLesson(u, o, t)} title="New lesson (N)">
 					<Icon name="plus" size={16} /> New lesson
 				</a>
