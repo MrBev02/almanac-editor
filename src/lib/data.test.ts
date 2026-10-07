@@ -5,7 +5,7 @@ import { blankLesson } from './domain/newLesson.ts';
 import { blankUnit } from './domain/newUnit.ts';
 import { ConflictError, NotFoundError, type Loaded } from './domain/repo.ts';
 import type { Store } from './domain/store.ts';
-import type { Lesson, Unit } from './domain/types.ts';
+import type { Lesson, Offering, Unit } from './domain/types.ts';
 
 const UNIT = 'subjects/sorting/units/sorting_things';
 
@@ -92,7 +92,9 @@ describe('Data.createLesson', () => {
 	it('writes nothing when the schema refuses the plan', async () => {
 		const { store, data } = setup();
 		const bad = blankLesson('Sorting hats', 50);
-		await expect(data.createLesson(UNIT, 'lessons/02_x.json', bad)).rejects.toThrow(/section/);
+		await expect(data.createLesson(UNIT, 'lessons/02_x.json', bad)).rejects.toThrow(
+			'Section 1, What happens is empty.'
+		);
 		expect(store.writes).toEqual([]);
 	});
 
@@ -151,7 +153,7 @@ describe('Data.createUnit', () => {
 		const store = new MemoryStore(new Map());
 		const data = new Data(store);
 		await expect(data.createUnit('subjects/dt/units/x', blankUnit('', 'D&T', ''))).rejects.toThrow(
-			/unit_title/
+			'Unit title is empty.'
 		);
 		expect(store.writes).not.toContain('subjects/dt/units/x/unit.json');
 	});
@@ -168,5 +170,68 @@ describe('Data.createUnit', () => {
 			ConflictError
 		);
 		expect(store.writes).toEqual([]);
+	});
+});
+
+describe('Data.saveOffering', () => {
+	const PATH = 'offerings/2030_y7_class1.json';
+	const offering = (): Offering => ({
+		id: '2030-y7-class1',
+		year: 2030,
+		subject: 'subjects/sorting',
+		units: [{ unit: 'units/sorting_things', term: 'Term 1' }]
+	});
+	const offeringSchema = {
+		$schema: 'https://json-schema.org/draft/2020-12/schema',
+		type: 'object',
+		properties: {
+			units: {
+				type: 'array',
+				minItems: 1,
+				items: { type: 'object', properties: { lessons: { type: 'array', minItems: 1 } } }
+			}
+		}
+	};
+
+	function withOffering() {
+		const { store, data } = setup(false);
+		store.files.set(PATH, dump(offering()));
+		store.files.set('schemas/offering.schema.json', JSON.stringify(offeringSchema));
+		return { store, data };
+	}
+
+	it('writes the class and serves it from the list afterwards', async () => {
+		const { store, data } = withOffering();
+		const { sha } = await store.readJson<Offering>(PATH);
+		await data.offerings();
+		const next = { ...offering(), units: [{ unit: 'units/sorting_things', term: 'Term 2' }] };
+		await data.saveOffering(PATH, next, sha, 'Edit 2030-y7-class1');
+		expect(store.files.get(PATH)).toBe(dump(next));
+		expect((await data.offerings())[0][1].units[0].term).toBe('Term 2');
+	});
+
+	it('writes nothing when the schema refuses the class', async () => {
+		const { store, data } = withOffering();
+		const { sha } = await store.readJson<Offering>(PATH);
+		const bad = { ...offering(), units: [] };
+		await expect(data.saveOffering(PATH, bad, sha, 'Edit')).rejects.toThrow();
+		expect(store.writes).toEqual([]);
+	});
+
+	it('refuses a class that changed since it was read', async () => {
+		const { store, data } = withOffering();
+		const { sha } = await store.readJson<Offering>(PATH);
+		store.files.set(PATH, dump({ ...offering(), year_group: 'Year 7' }));
+		await expect(data.saveOffering(PATH, offering(), sha, 'Edit')).rejects.toBeInstanceOf(
+			ConflictError
+		);
+	});
+});
+
+describe('Data.oneOffs', () => {
+	it('lists the subject’s one-offs', async () => {
+		const { store, data } = setup(false);
+		store.files.set('subjects/sorting/one_offs/first_day/README.md', '# First day\n');
+		expect(await data.oneOffs('subjects/sorting')).toEqual(['one_offs/first_day']);
 	});
 });

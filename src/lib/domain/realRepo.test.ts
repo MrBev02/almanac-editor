@@ -13,8 +13,8 @@ import { feedbackEntries, lessonRef, recordPaths, type DeliveryRecord } from './
 import { dump } from './format.ts';
 import { unitDirs } from './layout.ts';
 import { fromDraft, toDraft } from './lessonEdit.ts';
-import { withColour } from './offeringEdit.ts';
-import { blankLesson, lessonFile, lessonFolders, nextNumber, withLesson } from './newLesson.ts';
+import { fromClassDraft, toClassDraft, withColour } from './offeringEdit.ts';
+import { blankLesson, lessonFile, lessonFolders, withLesson } from './newLesson.ts';
 import { copyOffering } from './newOffering.ts';
 import { STARTER_SCHEMAS } from './starter.ts';
 import {
@@ -79,7 +79,7 @@ describe.skipIf(!root)('real data repo', () => {
 			const dir = f.slice(0, -'/unit.json'.length);
 			const unit: Unit = JSON.parse(read(f));
 			return lessonFolders(unit).flatMap((folder) => {
-				const ref = lessonFile(folder, nextNumber(dir, unit, folder, files), 'new_plan');
+				const ref = lessonFile(folder, 'new_plan');
 				const before = read(f).split('\n');
 				const after = dump(withLesson(unit, ref)).split('\n');
 				const added = after.filter((line) => !before.includes(line));
@@ -205,6 +205,14 @@ print(json.dumps(out))
 			];
 		});
 		expect(problems).toEqual([]);
+	});
+
+	it('saves every offering untouched in the class editor byte for byte', () => {
+		const changed = offerings.filter((f) => {
+			const original: Offering = JSON.parse(read(f));
+			return dump(fromClassDraft(original, toClassDraft(original))) !== read(f);
+		});
+		expect(changed).toEqual([]);
 	});
 
 	it('copies every offering to next year as a valid file', () => {

@@ -104,6 +104,11 @@
 			lede={unit.description}
 		>
 			{#snippet actions()}
+				{#if o}
+					<a class="btn" href={links.editClass(o, u, t)}>
+						<Icon name="pencil" size={16} /> Edit class
+					</a>
+				{/if}
 				<a class="btn" href={links.unitEdit(u, o, t)} title="Edit unit (E)">
 					<Icon name="pencil" size={16} /> Edit unit
 				</a>

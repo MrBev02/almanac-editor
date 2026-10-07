@@ -134,6 +134,9 @@
 								fixed={colourOf(path, offering.colour)}
 								onsaved={(colour) => (chosen[path] = colour)}
 							/>
+							<a class="copy" href={links.editClass(path)}>
+								<Icon name="pencil" size={14} /> Edit class
+							</a>
 							<a class="copy" href={links.newClass(path)}>
 								<Icon name="plus" size={14} /> Copy to {offering.year + 1}
 							</a>
@@ -254,7 +257,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 5px;
-		margin-top: 8px;
+		margin-top: 6px;
 		font-size: 12px;
 		font-weight: 650;
 		text-decoration: none;

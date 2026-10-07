@@ -39,9 +39,9 @@ src/lib/domain/   plain TypeScript, no Svelte, unit-tested
   lessonEdit.ts   toDraft / fromDraft: editing without disturbing the file
   offerings.ts    port of the data repo's scripts/offering_lessons.py
   deliveries.ts   delivery records: what a class was taught, and its feedback
-  offeringEdit.ts withColour(): the one field the editor changes on an offering
+  offeringEdit.ts withColour(), and the class editor's toClassDraft / fromClassDraft
   newOffering.ts  copyOffering / blankOffering: a new class, and its id and path
-  newLesson.ts    a new plan: its file name and number, and the unit's index
+  newLesson.ts    a new plan: its file name, and the unit's index
   newUnit.ts      a new unit, and a new subject: where they go, what they hold
   unitEdit.ts     a unit's own fields and dot points; a subject's outcome.json
   layout.ts       where units, offerings, schemas and content files are
@@ -70,7 +70,9 @@ src/lib/components/, src/routes/   UI
 - **The editor never touches** a plan's `materials` (derived; the data repo's
   `materials.yml` Action regenerates it), a saved plan's curriculum link
   id/coverage/mode/framework, or a resource's url/canvas/file. A new plan's
-  links are chosen from the unit's registry before it is first saved.
+  links are chosen from the unit's registry before it is first saved. On an
+  offering it never touches `canvas`, `differentiation` or the class's name;
+  `colour` changes only through the home page's picker.
 - **Validation uses the files' own `schemas/`**, read at run time, through
   `@cfworker/json-schema`. Not Ajv: Ajv compiles with `new Function`, which the
   CSP blocks. Don't add `'unsafe-eval'`. A folder that starts empty gets the
@@ -105,8 +107,6 @@ src/lib/components/, src/routes/   UI
 
 These were agreed in planning, each to become an issue:
 
-- offering editing: reorder, add and remove lessons per unit entry, plus term,
-  weeks and notes
 - drag-and-drop
 - offline editing: an installable app with commits queued until back online
 - a Pyodide test: can the data repo's Python run in the browser and replace the

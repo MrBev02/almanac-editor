@@ -20,6 +20,9 @@ export const links = {
 	outcomes: (u: string, o?: string | null, t?: string | null) =>
 		resolve('/outcomes') + query({ u, o, t }),
 	newUnit: (s?: string | null) => resolve('/new-unit') + query({ s }),
+	/** A class's editor; `u` and `t` name the unit page it was opened from, to go back to. */
+	editClass: (o: string, u?: string | null, t?: string | null) =>
+		resolve('/class-edit') + query({ o, u, t }),
 	newLesson: (u: string, o?: string | null, t?: string | null) =>
 		resolve('/new-lesson') + query({ u, o, t }),
 	unit: (u: string, o?: string | null, t?: string | null) => resolve('/unit') + query({ u, o, t }),

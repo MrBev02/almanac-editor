@@ -20,6 +20,7 @@
 		toDraft,
 		type LessonDraft
 	} from '#lib/domain/lessonEdit.ts';
+	import { fieldName } from '#lib/domain/fieldNames.ts';
 	import { stem } from '#lib/domain/paths.ts';
 	import { AuthError, ConflictError } from '#lib/domain/repo.ts';
 	import type { Store } from '#lib/domain/store.ts';
@@ -434,7 +435,8 @@
 				Not saved. Fix these first:
 				<ul>
 					{#each status.problems as p, i (i)}<li>
-							<code>{p.path || 'plan'}</code>: {p.message}
+							<b>{fieldName('lesson.schema.json', p.path)}</b>
+							{p.message}.
 						</li>{/each}
 				</ul>
 			</div>

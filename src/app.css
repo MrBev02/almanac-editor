@@ -298,6 +298,7 @@ input[type='text'],
 input[type='password'],
 input[type='number'],
 input[type='search'],
+input[type='date'],
 textarea,
 select {
 	width: 100%;
@@ -337,7 +338,8 @@ textarea {
 	min-height: 2.6em;
 }
 
-input[type='checkbox'] {
+input[type='checkbox'],
+input[type='radio'] {
 	accent-color: var(--house);
 	width: 16px;
 	height: 16px;

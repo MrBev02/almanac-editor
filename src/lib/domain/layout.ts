@@ -76,3 +76,18 @@ export function subjectOf(unitDir: string): string {
 export function contentPath(lessonPath: string): string {
 	return lessonPath.replace(/\.json$/, '.md');
 }
+
+/**
+ * The subject's one-off lessons, as `one_offs/<name>` relative to the subject:
+ * every directory directly under `<subject>/one_offs/` that holds a file.
+ */
+export function oneOffDirs(paths: Iterable<string>, subject: string): string[] {
+	const prefix = `${subject}/one_offs/`;
+	const found = new Set<string>();
+	for (const path of paths) {
+		if (!path.startsWith(prefix)) continue;
+		const name = path.slice(prefix.length).split('/')[0];
+		if (name && path.length > prefix.length + name.length) found.add(`one_offs/${name}`);
+	}
+	return [...found].sort();
+}

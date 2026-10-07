@@ -17,7 +17,14 @@ import {
 	type Resolution,
 	type TaughtInput
 } from './domain/deliveries.ts';
-import { contentPath, offeringPaths, outcomePath, schemaPaths, unitDirs } from './domain/layout.ts';
+import {
+	contentPath,
+	offeringPaths,
+	oneOffDirs,
+	outcomePath,
+	schemaPaths,
+	unitDirs
+} from './domain/layout.ts';
 import { basename, join, normalise, stem } from './domain/paths.ts';
 import { withColour } from './domain/offeringEdit.ts';
 import { withLesson } from './domain/newLesson.ts';
@@ -28,7 +35,8 @@ import { ConflictError, type Loaded } from './domain/repo.ts';
 import type { Store } from './domain/store.ts';
 import type { Lesson, Offering, Unit } from './domain/types.ts';
 import type { OutcomeSet } from './domain/unitEdit.ts';
-import { Schemas } from './domain/validate.ts';
+import { describeProblems } from './domain/fieldNames.ts';
+import { Schemas, type Problem } from './domain/validate.ts';
 
 export interface UnitEntry {
 	dir: string;
@@ -96,9 +104,7 @@ export class Data {
 		const schemas = await this.schemas();
 		if (schemas.has('offering.schema.json')) {
 			const problems = schemas.validate('offering.schema.json', doc);
-			if (problems.length) {
-				throw new Error(problems.map((p) => `${p.path || 'class'}: ${p.message}`).join('; '));
-			}
+			if (problems.length) throw problemError('offering.schema.json', problems);
 		}
 		await this.store.createJson(path, doc, `Add class ${doc.id}`);
 		this.offeringsPromise = null;
@@ -118,7 +124,7 @@ export class Data {
 			}
 			this.schemasPromise = null;
 		}
-		await this.check('unit.schema.json', doc, 'unit');
+		await this.check('unit.schema.json', doc);
 		await this.store.createJson(join(dir, 'unit.json'), doc, `Add unit ${basename(dir)}`);
 		this.unitsPromise = null;
 	}
@@ -150,7 +156,7 @@ export class Data {
 	 * refuses it.
 	 */
 	async saveUnit(dir: string, next: Unit, sha: string, message: string): Promise<string> {
-		await this.check('unit.schema.json', next, 'unit');
+		await this.check('unit.schema.json', next);
 		const newSha = await this.store.writeJson(join(dir, 'unit.json'), next, sha, message);
 		this.unitsPromise = null;
 		return newSha;
@@ -189,7 +195,7 @@ export class Data {
 		sha: string | null,
 		message: string
 	): Promise<string> {
-		await this.check('outcome.schema.json', next, 'outcomes');
+		await this.check('outcome.schema.json', next);
 		return sha === null
 			? this.store.createJson(path, next, message)
 			: this.store.writeJson(path, next, sha, message);
@@ -208,8 +214,8 @@ export class Data {
 		const unitPath = join(unitDir, 'unit.json');
 		const name = stem(ref);
 		const { doc: unit, sha } = await this.store.readJson<Unit>(unitPath);
-		await this.check('lesson.schema.json', doc, 'plan');
-		await this.check('unit.schema.json', withLesson(unit, ref), 'unit');
+		await this.check('lesson.schema.json', doc);
+		await this.check('unit.schema.json', withLesson(unit, ref));
 		await this.store.createJson(path, doc, message || `Add lesson ${name}`);
 		const listed = `List ${name} in ${basename(unitDir)}`;
 		try {
@@ -242,9 +248,7 @@ export class Data {
 		// A folder without schemas/ saves unchecked.
 		if (schemas.has('offering.schema.json')) {
 			const problems = schemas.validate('offering.schema.json', next);
-			if (problems.length) {
-				throw new Error(problems.map((p) => `${p.path || 'offering'}: ${p.message}`).join('; '));
-			}
+			if (problems.length) throw problemError('offering.schema.json', problems);
 		}
 		const message = colour ? `Set ${doc.id} colour to ${colour}` : `Clear ${doc.id} colour`;
 		await this.store.writeJson(path, next, sha, message);
@@ -252,6 +256,26 @@ export class Data {
 		this.offeringsPromise = Promise.resolve(
 			list.map(([p, o]) => [p, p === path ? next : o] as [string, Offering])
 		);
+	}
+
+	/**
+	 * Saves an edited class over the version `sha` names and returns the new
+	 * version id. Throws ConflictError if the file changed since it was read,
+	 * and an Error listing the problems if the schema refuses it.
+	 */
+	async saveOffering(path: string, doc: Offering, sha: string, message: string): Promise<string> {
+		await this.check('offering.schema.json', doc);
+		const next = await this.store.writeJson(path, doc, sha, message);
+		const list = await this.offerings();
+		this.offeringsPromise = Promise.resolve(
+			list.map(([p, o]) => [p, p === path ? doc : o] as [string, Offering])
+		);
+		return next;
+	}
+
+	/** The subject's one-off lessons, as `one_offs/<name>` relative to the subject. */
+	async oneOffs(subject: string): Promise<string[]> {
+		return oneOffDirs((await this.store.paths()).keys(), subject);
 	}
 
 	lesson(path: string): Promise<Loaded<Lesson>> {
@@ -318,11 +342,11 @@ export class Data {
 		if (await this.store.has(path)) {
 			const { doc, sha } = await this.store.readJson<DeliveryRecord>(path);
 			const next = withDelivery(doc, offering.id, at.ref, delivery);
-			await this.check('delivery.schema.json', next, 'record');
+			await this.check('delivery.schema.json', next);
 			await this.store.writeJson(path, next, sha, message);
 		} else {
 			const next = withDelivery(null, offering.id, at.ref, delivery);
-			await this.check('delivery.schema.json', next, 'record');
+			await this.check('delivery.schema.json', next);
 			await this.store.createJson(path, next, message);
 		}
 	}
@@ -333,18 +357,16 @@ export class Data {
 	 */
 	async resolve(held: HeldRecord, resolutions: Resolution[], message: string): Promise<void> {
 		const next = resolveFeedback(held.record, resolutions);
-		await this.check('delivery.schema.json', next, 'record');
+		await this.check('delivery.schema.json', next);
 		await this.store.writeJson(held.path, next, held.sha, message);
 	}
 
 	/** Throws the schema's problems, if the files include it; a folder without schemas/ saves unchecked. */
-	private async check(name: string, doc: unknown, what: string): Promise<void> {
+	private async check(name: string, doc: unknown): Promise<void> {
 		const schemas = await this.schemas();
 		if (!schemas.has(name)) return;
 		const problems = schemas.validate(name, doc);
-		if (problems.length) {
-			throw new Error(problems.map((p) => `${p.path || what}: ${p.message}`).join('; '));
-		}
+		if (problems.length) throw problemError(name, problems);
 	}
 
 	schemas(): Promise<Schemas> {
@@ -358,4 +380,9 @@ export class Data {
 		});
 		return this.schemasPromise;
 	}
+}
+
+/** An Error that lists a schema's problems in plain words, one sentence each. */
+function problemError(schema: string, problems: Problem[]): Error {
+	return new Error(describeProblems(schema, problems).join(' '));
 }

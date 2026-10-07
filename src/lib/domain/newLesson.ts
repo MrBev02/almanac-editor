@@ -2,11 +2,12 @@
  * Making a new lesson plan in a unit: where its file goes, what it starts
  * as, and how the unit's index takes it.
  *
- * - A plan is `<folder>/<NN>_<slug>.json`, where the folder is one the unit
+ * - A plan is `<folder>/<slug>.json`, where the folder is one the unit
  *   already keeps plans in (`lessons`, or a version folder such as
- *   `lessons/2026_y9`) and NN is one more than the highest number in that
- *   folder, counting files the index does not list. Existing files are never
- *   renumbered: offerings and delivery records refer to them by path.
+ *   `lessons/2026_y9`). New plans carry no number: the unit's `lessons` is
+ *   the suggested order, and each offering numbers the lessons it takes.
+ *   Older plans keep their `NN_` names, since offerings and delivery records
+ *   refer to them by path.
  * - The plan is added to the unit's `lessons` after the last one in the same
  *   folder, so a unit with versions stays grouped by version. An offering
  *   that lists its own lessons for the unit does not take the new one.
@@ -14,7 +15,7 @@
 
 import { ordered } from './lessonEdit.ts';
 import { entryTakes } from './offerings.ts';
-import { dirname, join, stem } from './paths.ts';
+import { dirname, join } from './paths.ts';
 import type { Lesson, Offering, Unit } from './types.ts';
 
 /** Schema order of a unit's keys, for placing `lessons` in a unit that has none. */
@@ -68,47 +69,18 @@ export function lessonFolders(unit: Unit): string[] {
 	return folders.length ? folders : [DEFAULT_FOLDER];
 }
 
-const NUMBERED = /^(\d+)_/;
-
 /**
- * The next plan number in `folder`, padded to the width the folder uses (two
- * digits by default). `paths` is every file in the store, so a plan the index
- * does not list still counts.
+ * A slug that starts with a number, as the unit's older plans do
+ * (`07_sorting_hats`). The data repo's scripts read that number as the plan's
+ * place in the unit, so a new plan's name must not start with one.
  */
-export function nextNumber(
-	unitDir: string,
-	unit: Unit,
-	folder: string,
-	paths: Iterable<string>
-): string {
-	const inFolder = join(unitDir, folder) + '/';
-	const stems: string[] = [];
-	for (const ref of unit.lessons ?? []) {
-		if (dirname(ref) === folder) stems.push(stem(ref));
-	}
-	for (const path of paths) {
-		if (
-			path.startsWith(inFolder) &&
-			path.endsWith('.json') &&
-			!path.slice(inFolder.length).includes('/')
-		) {
-			stems.push(stem(path));
-		}
-	}
-	let high = 0;
-	let width = 2;
-	for (const name of stems) {
-		const match = name.match(NUMBERED);
-		if (!match) continue;
-		high = Math.max(high, Number(match[1]));
-		width = Math.max(width, match[1].length);
-	}
-	return String(high + 1).padStart(width, '0');
+export function numbered(slug: string): boolean {
+	return /^\d+_/.test(slug);
 }
 
-/** `lessons`, `07`, `sorting_hats` -> `lessons/07_sorting_hats.json` */
-export function lessonFile(folder: string, number: string, slug: string): string {
-	return join(folder, `${number}_${slug}.json`);
+/** `lessons`, `sorting_hats` -> `lessons/sorting_hats.json` */
+export function lessonFile(folder: string, slug: string): string {
+	return join(folder, `${slug}.json`);
 }
 
 /**
