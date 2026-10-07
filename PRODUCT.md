@@ -60,8 +60,8 @@ available, never required.
   string. CSP limits connections to api.github.com; no third-party runtime
   scripts or hosted fonts; never `{@html}` on data.
 - Runtime dependencies: Svelte and `@cfworker/json-schema` only.
-- Never edits `materials`, curriculum link id/coverage/mode, or a resource's
-  url/canvas/file. Saves validate against the data repo's schemas and refuse
+- Never edits `materials`, a saved plan's curriculum link id/coverage/mode,
+  or a resource's url/canvas/file. A new plan picks its links when created. Saves validate against the data repo's schemas and refuse
   on conflict.
 - Generic: owner, repo and branch come from Settings.
 - New lesson plans are written in the app; existing files are never

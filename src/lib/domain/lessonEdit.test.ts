@@ -2,14 +2,16 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { dump } from './format.ts';
 import {
-	blankSection,
 	EditError,
+	blankSection,
 	fromDraft,
+	linkTo,
 	move,
 	ordered,
 	sectionTotal,
 	toDraft
 } from './lessonEdit.ts';
+import { blankLesson } from './newLesson.ts';
 import type { Lesson } from './types.ts';
 
 const text = readFileSync(new URL('./fixtures/lesson.json', import.meta.url), 'utf-8');
@@ -140,5 +142,29 @@ describe('helpers', () => {
 			'b',
 			'z'
 		]);
+	});
+});
+
+describe('fromDraft for a plan with no file yet', () => {
+	it('takes the links chosen in the editor, in link order, notes only when written', () => {
+		const original = blankLesson('New', 60);
+		const draft = toDraft(original);
+		draft.curriculum_links.push(linkTo({ id: 'SK-C02', framework: 'NESA' }));
+		draft.curriculum_links.push({
+			...linkTo({ id: 'SK-C01', framework: 'NESA' }),
+			mode: 'revisited',
+			note: 'Warm-up.'
+		});
+		expect(fromDraft(original, draft, true).curriculum_links).toEqual([
+			{ framework: 'NESA', id: 'SK-C02', coverage: 'full', mode: 'introduced' },
+			{ framework: 'NESA', id: 'SK-C01', coverage: 'full', mode: 'revisited', note: 'Warm-up.' }
+		]);
+	});
+
+	it('still refuses new links on a saved plan', () => {
+		const original = blankLesson('Saved', 60);
+		const draft = toDraft(original);
+		draft.curriculum_links.push(linkTo({ id: 'SK-C01', framework: 'NESA' }));
+		expect(() => fromDraft(original, draft)).toThrow(EditError);
 	});
 });

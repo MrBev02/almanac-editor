@@ -32,14 +32,38 @@ export function unitDir(subjectDir: string, slug: string): string {
 	return join(subjectDir, 'units', slug);
 }
 
-/** A unit with no plans yet: the fields a data repo's schema requires, in schema order. */
-export function blankUnit(title: string, subject: string, description: string): Unit {
+export interface DotPoint {
+	id: string;
+	framework: string;
+	phase: string;
+	text: string;
+}
+
+/**
+ * A unit with no plans yet: the fields a data repo's schema requires, in
+ * schema order. Dot points left wholly blank are dropped; the rest are kept
+ * as typed (trimmed), for the schema to judge.
+ */
+export function blankUnit(
+	title: string,
+	subject: string,
+	description: string,
+	points: DotPoint[] = []
+): Unit {
+	const registry = points
+		.map((p) => ({
+			id: p.id.trim(),
+			framework: p.framework.trim(),
+			phase: p.phase.trim(),
+			text: p.text.trim()
+		}))
+		.filter((p) => p.id || p.phase || p.text);
 	return ordered(
 		{
 			unit_title: title,
 			subject,
 			description,
-			syllabus_registry: [],
+			syllabus_registry: registry,
 			lessons: []
 		},
 		[],

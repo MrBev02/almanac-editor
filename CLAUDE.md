@@ -67,8 +67,9 @@ src/lib/components/, src/routes/   UI
     Run it after any change to `format.ts`, `lessonEdit.ts`, `offeringEdit.ts`,
     `offerings.ts` or `deliveries.ts`.
 - **The editor never touches** a plan's `materials` (derived; the data repo's
-  `materials.yml` Action regenerates it), curriculum link
-  id/coverage/mode/framework, or a resource's url/canvas/file.
+  `materials.yml` Action regenerates it), a saved plan's curriculum link
+  id/coverage/mode/framework, or a resource's url/canvas/file. A new plan's
+  links are chosen from the unit's registry before it is first saved.
 - **Validation uses the files' own `schemas/`**, read at run time, through
   `@cfworker/json-schema`. Not Ajv: Ajv compiles with `new Function`, which the
   CSP blocks. Don't add `'unsafe-eval'`. A folder that starts empty gets the

@@ -50,3 +50,15 @@ describe('blankUnit', () => {
 		);
 	});
 });
+
+describe('blankUnit dot points', () => {
+	it('keeps the typed points, trimmed, and drops wholly blank rows', () => {
+		const unit = blankUnit('U', 'S', '', [
+			{ id: ' DP-1 ', framework: 'NESA', phase: 'Planning', text: 'Plan a meal. ' },
+			{ id: '', framework: 'NESA', phase: '', text: '' }
+		]);
+		expect(unit.syllabus_registry).toEqual([
+			{ id: 'DP-1', framework: 'NESA', phase: 'Planning', text: 'Plan a meal.' }
+		]);
+	});
+});

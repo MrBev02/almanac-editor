@@ -7,7 +7,13 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import PageHead from '#lib/components/PageHead.svelte';
 	import { lessonSlug, validSlug } from '#lib/domain/newLesson.ts';
-	import { blankUnit, newSubjectDir, subjectDirs, unitDir } from '#lib/domain/newUnit.ts';
+	import {
+		blankUnit,
+		newSubjectDir,
+		subjectDirs,
+		unitDir,
+		type DotPoint
+	} from '#lib/domain/newUnit.ts';
 	import { basename, join } from '#lib/domain/paths.ts';
 	import { ConflictError } from '#lib/domain/repo.ts';
 	import { titleCase } from '#lib/house.ts';
@@ -21,7 +27,13 @@
 			? Promise.all([session.data.units(), session.data.store.paths()]).then(([units, paths]) => ({
 					units,
 					paths,
-					subjects: subjectDirs(units.map((u) => u.dir))
+					subjects: subjectDirs(units.map((u) => u.dir)),
+					// The framework most dot points use already, for a new one to start with.
+					framework:
+						units
+							.flatMap((u) => u.unit.syllabus_registry ?? [])
+							.map((e) => e.framework)
+							.find(Boolean) ?? ''
 				}))
 			: null
 	);
@@ -32,6 +44,7 @@
 	let description = $state('');
 	let slug = $state('');
 	let slugEdited = $state(false);
+	let points = $state<DotPoint[]>([]);
 	let saving = $state(false);
 	let problem = $state<string | null>(null);
 
@@ -44,7 +57,7 @@
 	{#await load}
 		<PageHead title={null} />
 		<div class="page"><div class="loading"><span></span><span></span><span></span></div></div>
-	{:then { units, paths, subjects }}
+	{:then { units, paths, subjects, framework }}
 		{@const fromQuery = page.url.searchParams.get('s')}
 		{@const subject =
 			picked ?? (fromQuery && subjects.includes(fromQuery) ? fromQuery : (subjects[0] ?? NEW))}
@@ -81,7 +94,10 @@
 					problem = null;
 					try {
 						const name = fresh ? subjectName.trim() : existingName;
-						await data.createUnit(dir, blankUnit(title.trim(), name, description.trim()));
+						await data.createUnit(
+							dir,
+							blankUnit(title.trim(), name, description.trim(), $state.snapshot(points))
+						);
 						session.revision += 1;
 						await goto(links.unit(dir));
 					} catch (error) {
@@ -129,6 +145,65 @@
 						bind:value={description}
 						placeholder="One or two sentences on what the unit covers."></textarea>
 				</label>
+
+				<fieldset class="points">
+					<legend>Syllabus dot points</legend>
+					<p class="hint">
+						The points this unit’s lessons link to. Add them now or later in <code>unit.json</code>,
+						unless your schemas ask for at least one.
+					</p>
+					{#each points as point, i (i)}
+						<div class="point">
+							<div class="point-row">
+								<label class="field">
+									<span>Id</span>
+									<input type="text" bind:value={point.id} placeholder="DP-01" spellcheck="false" />
+								</label>
+								<label class="field">
+									<span>Framework</span>
+									<input type="text" bind:value={point.framework} list="frameworks" />
+								</label>
+								<label class="field grow">
+									<span>Phase</span>
+									<input
+										type="text"
+										bind:value={point.phase}
+										placeholder="Researching and planning"
+									/>
+								</label>
+								<button
+									type="button"
+									class="quiet icon danger"
+									title="Remove dot point"
+									aria-label="Remove dot point {i + 1}"
+									onclick={() => points.splice(i, 1)}><Icon name="bin" /></button
+								>
+							</div>
+							<label class="field">
+								<span>Text, as the syllabus words it</span>
+								<textarea bind:value={point.text}></textarea>
+							</label>
+						</div>
+					{/each}
+					<datalist id="frameworks">
+						<option value="NESA"></option>
+						<option value="ACARA"></option>
+						<option value="IB"></option>
+					</datalist>
+					<button
+						type="button"
+						class="add"
+						onclick={() =>
+							points.push({
+								id: '',
+								framework: points.at(-1)?.framework ?? framework,
+								phase: points.at(-1)?.phase ?? '',
+								text: ''
+							})}
+					>
+						<Icon name="plus" size={16} /> Add dot point
+					</button>
+				</fieldset>
 
 				<label class="field">
 					<span>Folder name</span>
@@ -183,6 +258,51 @@
 
 	.msg {
 		margin-bottom: 20px;
+	}
+
+	.points {
+		border: 0;
+		padding: 0;
+		margin: 8px 0 24px;
+	}
+
+	.points legend {
+		font-size: 15px;
+		font-weight: 800;
+		padding: 0;
+		margin-bottom: 4px;
+	}
+
+	.points .hint {
+		margin: 0 0 12px;
+	}
+
+	.point {
+		padding: 12px 14px 2px;
+		margin-bottom: 8px;
+		background: var(--paper);
+	}
+
+	.point-row {
+		display: grid;
+		grid-template-columns: 110px 120px minmax(0, 1fr) auto;
+		gap: 0 10px;
+		align-items: end;
+	}
+
+	.point-row button {
+		margin-bottom: 16px;
+	}
+
+	@media (max-width: 560px) {
+		.point-row {
+			grid-template-columns: 1fr 1fr auto;
+		}
+
+		.point-row .grow {
+			grid-column: 1 / -1;
+			grid-row: 2;
+		}
 	}
 
 	.actions {
