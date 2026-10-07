@@ -25,6 +25,11 @@ private.
   one.
 - Makes a new unit, in a subject the files have or a new one, with its
   syllabus dot points. An empty folder starts here.
+- Edits a unit (`E` on the unit page): title, description, syllabus dot points,
+  and which of the subject's outcomes apply. Edits the subject's outcomes in
+  its `outcome.json`, creating the file if needed. A dot point's id and an
+  outcome's code stay fixed once saved, and one still linked or named can't be
+  removed.
 - Writes a new lesson plan in a unit (`N` on the unit page): names its file
   after the title, numbered after the last plan in its folder, then opens it
   in the editor. Creating it writes the plan and adds it to the end of the

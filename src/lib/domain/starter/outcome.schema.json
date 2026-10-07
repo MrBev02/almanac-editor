@@ -1,0 +1,36 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Outcomes",
+	"description": "Almanac's starter schema: a subject's outcomes, which its units name by code. Replace or extend it to suit your school.",
+	"type": "object",
+	"required": ["name", "framework", "outcomes"],
+	"properties": {
+		"name": {
+			"type": "string",
+			"minLength": 1
+		},
+		"framework": {
+			"type": "string"
+		},
+		"stage": {
+			"type": "string"
+		},
+		"outcomes": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": ["code", "text"],
+				"properties": {
+					"code": {
+						"type": "string",
+						"minLength": 1
+					},
+					"text": {
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		}
+	}
+}

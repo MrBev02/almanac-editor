@@ -9,11 +9,13 @@
 import type { Schema } from '@cfworker/json-schema';
 import lesson from './starter/lesson.schema.json';
 import offering from './starter/offering.schema.json';
+import outcome from './starter/outcome.schema.json';
 import unit from './starter/unit.schema.json';
 
 export const STARTER_SCHEMAS: Record<string, Schema> = {
 	'lesson.schema.json': lesson as Schema,
 	'offering.schema.json': offering as Schema,
+	'outcome.schema.json': outcome as Schema,
 	'unit.schema.json': unit as Schema
 };
 

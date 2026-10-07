@@ -139,6 +139,7 @@ describe('Data.createUnit', () => {
 		expect(store.writes).toEqual([
 			'schemas/lesson.schema.json',
 			'schemas/offering.schema.json',
+			'schemas/outcome.schema.json',
 			'schemas/unit.schema.json',
 			'subjects/dt/units/products/unit.json'
 		]);

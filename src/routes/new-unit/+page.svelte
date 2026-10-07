@@ -7,13 +7,9 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import PageHead from '#lib/components/PageHead.svelte';
 	import { lessonSlug, validSlug } from '#lib/domain/newLesson.ts';
-	import {
-		blankUnit,
-		newSubjectDir,
-		subjectDirs,
-		unitDir,
-		type DotPoint
-	} from '#lib/domain/newUnit.ts';
+	import { blankUnit, newSubjectDir, subjectDirs, unitDir } from '#lib/domain/newUnit.ts';
+	import type { PointDraft } from '#lib/domain/unitEdit.ts';
+	import DotPointsEditor from '#lib/components/DotPointsEditor.svelte';
 	import { basename, join } from '#lib/domain/paths.ts';
 	import { ConflictError } from '#lib/domain/repo.ts';
 	import { titleCase } from '#lib/house.ts';
@@ -44,7 +40,7 @@
 	let description = $state('');
 	let slug = $state('');
 	let slugEdited = $state(false);
-	let points = $state<DotPoint[]>([]);
+	let points = $state<PointDraft[]>([]);
 	let saving = $state(false);
 	let problem = $state<string | null>(null);
 
@@ -152,57 +148,7 @@
 						The points this unit’s lessons link to. Add them now or later in <code>unit.json</code>,
 						unless your schemas ask for at least one.
 					</p>
-					{#each points as point, i (i)}
-						<div class="point">
-							<div class="point-row">
-								<label class="field">
-									<span>Id</span>
-									<input type="text" bind:value={point.id} placeholder="DP-01" spellcheck="false" />
-								</label>
-								<label class="field">
-									<span>Framework</span>
-									<input type="text" bind:value={point.framework} list="frameworks" />
-								</label>
-								<label class="field grow">
-									<span>Phase</span>
-									<input
-										type="text"
-										bind:value={point.phase}
-										placeholder="Researching and planning"
-									/>
-								</label>
-								<button
-									type="button"
-									class="quiet icon danger"
-									title="Remove dot point"
-									aria-label="Remove dot point {i + 1}"
-									onclick={() => points.splice(i, 1)}><Icon name="bin" /></button
-								>
-							</div>
-							<label class="field">
-								<span>Text, as the syllabus words it</span>
-								<textarea bind:value={point.text}></textarea>
-							</label>
-						</div>
-					{/each}
-					<datalist id="frameworks">
-						<option value="NESA"></option>
-						<option value="ACARA"></option>
-						<option value="IB"></option>
-					</datalist>
-					<button
-						type="button"
-						class="add"
-						onclick={() =>
-							points.push({
-								id: '',
-								framework: points.at(-1)?.framework ?? framework,
-								phase: points.at(-1)?.phase ?? '',
-								text: ''
-							})}
-					>
-						<Icon name="plus" size={16} /> Add dot point
-					</button>
+					<DotPointsEditor bind:points {framework} />
 				</fieldset>
 
 				<label class="field">
@@ -275,34 +221,6 @@
 
 	.points .hint {
 		margin: 0 0 12px;
-	}
-
-	.point {
-		padding: 12px 14px 2px;
-		margin-bottom: 8px;
-		background: var(--paper);
-	}
-
-	.point-row {
-		display: grid;
-		grid-template-columns: 110px 120px minmax(0, 1fr) auto;
-		gap: 0 10px;
-		align-items: end;
-	}
-
-	.point-row button {
-		margin-bottom: 16px;
-	}
-
-	@media (max-width: 560px) {
-		.point-row {
-			grid-template-columns: 1fr 1fr auto;
-		}
-
-		.point-row .grow {
-			grid-column: 1 / -1;
-			grid-row: 2;
-		}
 	}
 
 	.actions {
