@@ -37,7 +37,8 @@
 		viewHref,
 		onsaved,
 		onreload,
-		feedback
+		feedback,
+		create
 	}: {
 		path: string;
 		lesson: Lesson;
@@ -52,6 +53,11 @@
 		onreload: () => void;
 		/** Open feedback from the delivery records, for the margin. */
 		feedback?: Snippet;
+		/**
+		 * Set for a plan with no file yet: saving calls this instead of
+		 * overwriting `path`, and is allowed before anything is changed.
+		 */
+		create?: (lesson: Lesson, message: string) => Promise<void>;
 	} = $props();
 
 	// The editor works on a copy taken when it opens; a save makes the saved plan the new baseline.
@@ -60,7 +66,7 @@
 	// svelte-ignore state_referenced_locally
 	let baseline = $state(JSON.stringify(toDraft(lesson)));
 	// svelte-ignore state_referenced_locally
-	let message = $state(`Edit ${stem(path)}`);
+	let message = $state(create ? `Add lesson ${stem(path)}` : `Edit ${stem(path)}`);
 	let saving = $state(false);
 	let status = $state<
 		| { kind: 'saved'; sectionsMoved: boolean }
@@ -100,14 +106,20 @@
 		}
 		saving = true;
 		try {
-			const newSha = await store.writeJson(path, next, sha, message.trim() || `Edit ${stem(path)}`);
+			const text = message.trim() || (create ? `Add lesson ${stem(path)}` : `Edit ${stem(path)}`);
+			let newSha = '';
+			if (create) await create(next, text);
+			else newSha = await store.writeJson(path, next, sha, text);
 			const moved = sectionsChanged(lesson, next);
-			onsaved(next, newSha);
+			// The new baseline goes first, so a page that moves on after the save is not asked to discard.
 			draft = toDraft(next);
 			baseline = JSON.stringify(toDraft(next));
 			status = { kind: 'saved', sectionsMoved: moved && hasContent };
+			onsaved(next, newSha);
 		} catch (error) {
-			if (error instanceof ConflictError) status = { kind: 'conflict' };
+			if (error instanceof ConflictError && create) {
+				status = { kind: 'error', text: (error as Error).message };
+			} else if (error instanceof ConflictError) status = { kind: 'conflict' };
 			else if (error instanceof AuthError) {
 				status = {
 					kind: 'error',
@@ -400,15 +412,15 @@
 		{/if}
 		<a class="btn" href={viewHref}>
 			<Icon name="eye" size={16} />
-			{dirty ? 'Discard' : 'View'}
+			{create ? 'Cancel' : dirty ? 'Discard' : 'View'}
 		</a>
 		<button
 			class="primary"
 			type="button"
 			onclick={save}
-			disabled={saving || !dirty || !session.active}
+			disabled={saving || !(dirty || create) || !session.active}
 		>
-			{saving ? 'Saving…' : 'Save'}
+			{saving ? 'Saving…' : create ? 'Create lesson' : 'Save'}
 			<kbd>Ctrl S</kbd>
 		</button>
 	</div>

@@ -64,7 +64,9 @@ available, never required.
   url/canvas/file. Saves validate against the data repo's schemas and refuse
   on conflict.
 - Generic: owner, repo and branch come from Settings.
-- Decided but not built: offering editing, new offerings, drag-and-drop,
+- New lesson plans are written in the app; existing files are never
+  renumbered, because offerings and delivery records name them by path.
+- Decided but not built: offering editing, drag-and-drop,
   offline queueing, deck preview, GitHub App sign-in, custom domain.
 
 ## Brand Commitments

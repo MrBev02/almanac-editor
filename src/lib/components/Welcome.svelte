@@ -65,11 +65,11 @@
 <div class="welcome">
 	<section class="pitch">
 		<p class="mark">Almanac</p>
-		<h1>Fix the lesson once.<br />Every deck and workbook follows.</h1>
+		<h1>One lesson plan.<br />Every deck and workbook built from it.</h1>
 		<p class="lede">
-			Almanac edits the lesson plans in a folder of files. Find any lesson in two keystrokes, change
-			the wording or the timings, and save. The slides, workbooks and plans built from those files
-			stay in step.
+			Your lessons are plain files in a folder you own, and your build scripts turn them into
+			slides, workbooks and plans. Almanac is where you write them. Start a new lesson, or press
+			Ctrl+K to find an old one, change the wording or the timings, and save.
 		</p>
 		<div class="ways">
 			{#if session.waiting}
@@ -112,6 +112,10 @@
 				let Almanac commit each save to GitHub for you.
 			</li>
 			<li><strong>Byte for byte.</strong> Saved files match what your own scripts write.</li>
+			<li>
+				<strong>Lessons as code.</strong> The same idea as docs-as-code: one source, every output built
+				from it, history in git.
+			</li>
 		</ul>
 	</section>
 
