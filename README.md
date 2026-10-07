@@ -73,9 +73,10 @@ to `api.github.com`, and a Content-Security-Policy blocks the page from
 connecting anywhere else. A later version will replace the pasted token with a
 GitHub App sign-in, which keeps the token out of the browser entirely.
 
-**Origin:** browser storage is shared by every GitHub Pages site on the same
-account (`<owner>.github.io`). Until this app has its own domain, publish no
-other Pages site from this account.
+**Origin:** browser storage, and a folder's access, are shared by every
+GitHub Pages site on the same account (`<owner>.github.io`). The app is served
+from <https://almanac-editor.github.io/>, by an org that exists only for it.
+Publish no other Pages site from the `almanac-editor` org.
 
 ## Development
 
@@ -105,5 +106,6 @@ They check that:
 ## Deploying
 
 `.github/workflows/deploy.yml` builds on every push to `main` and publishes to
-GitHub Pages under `/<repo-name>`. When the app moves to its own domain, add a
-`static/CNAME` file and set `BASE_PATH: ''` in the workflow.
+<https://almanac-editor.github.io/>, the root of the org's Pages site. A fork
+published as a project site needs `BASE_PATH: /<repo-name>` in the workflow;
+a custom domain needs a `static/CNAME` file.

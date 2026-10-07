@@ -88,8 +88,9 @@ src/lib/components/, src/routes/   UI
 - **Dependencies:** pinned exactly (`save-exact=true` in `.npmrc`). Runtime
   dependencies are Svelte and the validator only.
 - **The origin:** every Pages site on an account shares `<owner>.github.io`
-  storage. Until the app has its own domain, publish no other Pages site from
-  the account.
+  storage and folder access. The app is the only Pages site of the
+  `almanac-editor` org (repo `almanac-editor/almanac-editor.github.io`,
+  served at the root). Publish no other Pages site from that org.
 
 ## Decided but not built
 
