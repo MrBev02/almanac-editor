@@ -20,9 +20,10 @@ import {
 import { contentPath, offeringPaths, schemaPaths, unitDirs } from './domain/layout.ts';
 import { basename, join, normalise, stem } from './domain/paths.ts';
 import { withColour } from './domain/offeringEdit.ts';
+import { withLesson } from './domain/newLesson.ts';
 import { offeringPath } from './domain/newOffering.ts';
 import { byNumber } from './house.ts';
-import type { Loaded } from './domain/repo.ts';
+import { ConflictError, type Loaded } from './domain/repo.ts';
 import type { Store } from './domain/store.ts';
 import type { Lesson, Offering, Unit } from './domain/types.ts';
 import { Schemas } from './domain/validate.ts';
@@ -100,6 +101,42 @@ export class Data {
 		await this.store.createJson(path, doc, `Add class ${doc.id}`);
 		this.offeringsPromise = null;
 		return path;
+	}
+
+	/**
+	 * Saves a new plan at `unitDir/ref` and adds it to the unit's index, in
+	 * that order, as two writes. Both files are checked against the schemas
+	 * before either is written. Throws ConflictError if the plan's file
+	 * exists. A unit that changed meanwhile is read again and the plan added
+	 * to that; if the index still cannot be written, the Error says the plan
+	 * is saved but not listed.
+	 */
+	async createLesson(unitDir: string, ref: string, doc: Lesson, message?: string): Promise<void> {
+		const path = join(unitDir, ref);
+		const unitPath = join(unitDir, 'unit.json');
+		const name = stem(ref);
+		const { doc: unit, sha } = await this.store.readJson<Unit>(unitPath);
+		await this.check('lesson.schema.json', doc, 'plan');
+		await this.check('unit.schema.json', withLesson(unit, ref), 'unit');
+		await this.store.createJson(path, doc, message || `Add lesson ${name}`);
+		const listed = `List ${name} in ${basename(unitDir)}`;
+		try {
+			try {
+				await this.store.writeJson(unitPath, withLesson(unit, ref), sha, listed);
+			} catch (error) {
+				if (!(error instanceof ConflictError)) throw error;
+				this.store.refresh();
+				const fresh = await this.store.readJson<Unit>(unitPath);
+				await this.store.writeJson(unitPath, withLesson(fresh.doc, ref), fresh.sha, listed);
+			}
+		} catch (error) {
+			throw new Error(
+				`${name} is saved, but adding it to ${unitPath} failed: ${(error as Error).message} Add "${ref}" to the unit's lessons by hand.`,
+				{ cause: error }
+			);
+		} finally {
+			this.unitsPromise = null;
+		}
 	}
 
 	/**

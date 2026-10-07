@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import Failure from '#lib/components/Failure.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import Lane from '#lib/components/Lane.svelte';
 	import PageHead from '#lib/components/PageHead.svelte';
 	import { formatDate } from '#lib/domain/deliveries.ts';
@@ -71,7 +73,15 @@
 			).then((rows) => new Map(rows))
 		);
 	});
+
+	function onkeydown(event: KeyboardEvent) {
+		if (event.key !== 'n' || event.ctrlKey || event.metaKey || event.altKey || !u) return;
+		if ((event.target as HTMLElement).closest('input, textarea, select, dialog[open]')) return;
+		goto(links.newLesson(u, o, t));
+	}
 </script>
+
+<svelte:window {onkeydown} />
 
 {#if !u}
 	<PageHead title="No unit given" />
@@ -92,6 +102,11 @@
 			title={unit.unit_title}
 			lede={unit.description}
 		>
+			{#snippet actions()}
+				<a class="btn solid" href={links.newLesson(u, o, t)} title="New lesson (N)">
+					<Icon name="plus" size={16} /> New lesson
+				</a>
+			{/snippet}
 			{#snippet meta()}
 				<span>{lessons.length} lessons</span>
 				<span>{Math.round(minutes / 6) / 10} hours of class time</span>

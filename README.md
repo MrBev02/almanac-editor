@@ -23,6 +23,11 @@ private.
 - Makes a new class: a copy of an existing one for a new year (units and
   lesson order kept; notes, cohort, dates and Canvas ids reset), or a blank
   one.
+- Writes a new lesson plan in a unit (`N` on the unit page): names its file
+  after the title, numbered after the last plan in its folder, then opens it
+  in the editor. Creating it writes the plan and adds it to the end of the
+  unit's `lessons`. A class that lists its own lessons for the unit is told
+  it won't get the new one.
 - Offers made-up sample lessons to look around without a token.
 - Shows a unit's lessons, either the whole index or in one class's order.
 - Shows a lesson plan, and edits it in place:

@@ -14,6 +14,7 @@ import { dump } from './format.ts';
 import { unitDirs } from './layout.ts';
 import { fromDraft, toDraft } from './lessonEdit.ts';
 import { withColour } from './offeringEdit.ts';
+import { blankLesson, lessonFile, lessonFolders, nextNumber, withLesson } from './newLesson.ts';
 import { copyOffering } from './newOffering.ts';
 import { lessonsForOffering } from './offerings.ts';
 import type { Lesson, Offering, Unit } from './types.ts';
@@ -62,6 +63,38 @@ describe.skipIf(!root)('real data repo', () => {
 			return dump(fromDraft(lesson, toDraft(lesson))) !== read(f);
 		});
 		expect(changed).toEqual([]);
+	});
+
+	it('adds a new plan to every unit by changing only its lessons list', () => {
+		const units = files.filter((f) => f.endsWith('/unit.json'));
+		const wrong = units.flatMap((f) => {
+			const dir = f.slice(0, -'/unit.json'.length);
+			const unit: Unit = JSON.parse(read(f));
+			return lessonFolders(unit).flatMap((folder) => {
+				const ref = lessonFile(folder, nextNumber(dir, unit, folder, files), 'new_plan');
+				const before = read(f).split('\n');
+				const after = dump(withLesson(unit, ref)).split('\n');
+				const added = after.filter((line) => !before.includes(line));
+				const ok =
+					after.length === before.length + 1 &&
+					added.every((line) => line.includes('"lessons/')) &&
+					!files.includes(`${dir}/${ref}`) &&
+					schemas.validate('unit.schema.json', withLesson(unit, ref)).length === 0;
+				return ok ? [] : [`${f} ${ref}`];
+			});
+		});
+		expect(wrong).toEqual([]);
+	});
+
+	it('accepts a filled-in new plan against the repo schema', () => {
+		const plan = {
+			...blankLesson('A new plan', 60),
+			description: 'What it is.',
+			sections: [{ section: 'What happens.', duration_minutes: 60 }],
+			learning_intentions: ['Know a thing.'],
+			success_criteria: ['I can do a thing.']
+		};
+		expect(schemas.validate('lesson.schema.json', plan)).toEqual([]);
 	});
 
 	it('finds every lesson valid against the repo schema', () => {

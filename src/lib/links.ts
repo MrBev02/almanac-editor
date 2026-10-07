@@ -15,6 +15,8 @@ export const links = {
 	home: () => resolve('/'),
 	settings: () => resolve('/settings'),
 	newClass: (from?: string | null) => resolve('/new-class') + query({ from }),
+	newLesson: (u: string, o?: string | null, t?: string | null) =>
+		resolve('/new-lesson') + query({ u, o, t }),
 	unit: (u: string, o?: string | null, t?: string | null) => resolve('/unit') + query({ u, o, t }),
 	lesson: (u: string, l: string, o?: string | null, t?: string | null, edit = false) =>
 		resolve('/lesson') + query({ u, l, o, t, edit: edit ? '1' : null })
