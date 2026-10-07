@@ -268,7 +268,7 @@
 					</ul>
 				{/if}
 				<p class="after">
-					Terms and lesson lists can be changed in the file afterwards. {copying
+					Units, terms and lesson lists can be changed afterwards, with Edit class on the home page. {copying
 						? `${copying.id} is left as it is.`
 						: ''}
 				</p>

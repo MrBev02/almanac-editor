@@ -233,7 +233,7 @@ function isEmpty(value: unknown): boolean {
 }
 
 /** Sets an optional value, or removes it when empty and the original did not already hold it empty. */
-function setField(
+export function setField(
 	target: Record<string, unknown>,
 	original: object,
 	key: string,
@@ -253,7 +253,7 @@ function put(target: Record<string, unknown>, key: string, value: string): void 
 	if (value !== '') target[key] = value;
 }
 
-function keysOf(value: object | undefined): string[] | undefined {
+export function keysOf(value: object | undefined): string[] | undefined {
 	return value ? Object.keys(value) : undefined;
 }
 

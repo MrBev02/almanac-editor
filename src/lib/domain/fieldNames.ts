@@ -74,7 +74,12 @@ const SCHEMAS: Record<string, Field> = {
 			year_group: text('Year group'),
 			class_label: text('Class'),
 			colour: text('Colour'),
+			mode: text('Mode'),
 			subject: text('Subject'),
+			cohort: {
+				name: 'Cohort',
+				fields: { size: text('Class size'), notes: text('About the class') }
+			},
 			units: list('Units', 'Unit', {
 				unit: text('Unit'),
 				term: text('Term'),
