@@ -14,6 +14,7 @@
 		DIFFERENTIATION_KEYS,
 		blankSection,
 		fromDraft,
+		linkTo,
 		move,
 		sectionTotal,
 		toDraft,
@@ -26,6 +27,9 @@
 	import type { Lesson, RegistryEntry } from '#lib/domain/types.ts';
 	import type { Problem, Schemas } from '#lib/domain/validate.ts';
 	import { session } from '#lib/session.svelte.ts';
+	import { titleCase } from '#lib/house.ts';
+
+	const MODES = ['introduced', 'developed', 'consolidated', 'revisited'] as const;
 
 	let {
 		path,
@@ -92,7 +96,7 @@
 		status = null;
 		let next: Lesson;
 		try {
-			next = fromDraft(lesson, $state.snapshot(draft) as LessonDraft);
+			next = fromDraft(lesson, $state.snapshot(draft) as LessonDraft, !!create);
 		} catch (error) {
 			status = { kind: 'error', text: (error as Error).message };
 			return;
@@ -318,19 +322,72 @@
 
 		<section>
 			<h2>Syllabus</h2>
-			<p class="hint">Ids, coverage and mode come from the unit’s registry. Notes can be edited.</p>
-			{#each draft.curriculum_links as link, i (i)}
-				<label class="field dot">
-					<b class="dot-id">{link.id}</b>
-					<span class="dot-text"
-						>{registry.get(link.id)?.text ?? 'Not in the unit’s registry'}
-						<i>{link.coverage}, {link.mode}</i></span
+			{#if create}
+				<p class="hint">Link the dot points this lesson covers, from the unit’s registry.</p>
+				{#each draft.curriculum_links as link, i (link.id)}
+					<div class="field dot">
+						<b class="dot-id">{link.id}</b>
+						<span class="dot-text">{registry.get(link.id)?.text ?? ''}</span>
+						<div class="dot-how">
+							<select bind:value={link.coverage} aria-label="Coverage of {link.id}">
+								<option value="full">Full</option>
+								<option value="partial">Partial</option>
+							</select>
+							<select bind:value={link.mode} aria-label="Mode for {link.id}">
+								{#each MODES as mode (mode)}<option value={mode}>{titleCase(mode)}</option>{/each}
+							</select>
+							<button
+								type="button"
+								class="quiet icon danger"
+								title="Unlink"
+								aria-label="Unlink {link.id}"
+								onclick={() => draft.curriculum_links.splice(i, 1)}><Icon name="bin" /></button
+							>
+						</div>
+						<textarea
+							bind:value={link.note}
+							placeholder="Note (optional)"
+							aria-label="Note for {link.id}"></textarea>
+					</div>
+				{/each}
+				{@const linked = new Set(draft.curriculum_links.map((l) => l.id))}
+				{@const open = [...registry.values()].filter((entry) => !linked.has(entry.id))}
+				{#if open.length}
+					<select
+						class="add-dot"
+						aria-label="Link a dot point"
+						value=""
+						onchange={(e) => {
+							const entry = registry.get(e.currentTarget.value);
+							if (entry) draft.curriculum_links.push(linkTo(entry));
+							e.currentTarget.value = '';
+						}}
 					>
-					<textarea bind:value={link.note} placeholder="Note (optional)"></textarea>
-				</label>
+						<option value="">Link a dot point…</option>
+						{#each open as entry (entry.id)}
+							<option value={entry.id}>{entry.id}: {entry.text}</option>
+						{/each}
+					</select>
+				{:else if registry.size === 0}
+					<p class="muted">The unit has no dot points yet.</p>
+				{/if}
 			{:else}
-				<p class="muted">No dot points linked.</p>
-			{/each}
+				<p class="hint">
+					Ids, coverage and mode come from the unit’s registry. Notes can be edited.
+				</p>
+				{#each draft.curriculum_links as link, i (i)}
+					<label class="field dot">
+						<b class="dot-id">{link.id}</b>
+						<span class="dot-text"
+							>{registry.get(link.id)?.text ?? 'Not in the unit’s registry'}
+							<i>{link.coverage}, {link.mode}</i></span
+						>
+						<textarea bind:value={link.note} placeholder="Note (optional)"></textarea>
+					</label>
+				{:else}
+					<p class="muted">No dot points linked.</p>
+				{/each}
+			{/if}
 		</section>
 
 		{#if draft.resources.length}
@@ -632,6 +689,23 @@
 		font-style: normal;
 		font-size: 12px;
 		color: var(--muted);
+	}
+
+	.dot-how {
+		grid-column: 1 / -1;
+		display: flex;
+		gap: 6px;
+		align-items: center;
+	}
+
+	.dot-how select {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.add-dot {
+		width: 100%;
+		margin-top: 4px;
 	}
 
 	.dot textarea {

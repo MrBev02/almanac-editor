@@ -68,6 +68,8 @@ export interface Unit {
 	unit_title: string;
 	description?: string;
 	syllabus_registry?: RegistryEntry[];
+	/** Outcome codes from the subject's `outcome.json`. */
+	applicable_outcomes?: string[];
 	lessons?: string[];
 	[key: string]: unknown;
 }

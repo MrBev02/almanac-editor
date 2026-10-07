@@ -1,0 +1,68 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Lesson plan",
+	"description": "Almanac's starter schema: the shape every lesson plan needs. Replace or extend it to suit your school.",
+	"type": "object",
+	"required": [
+		"title",
+		"description",
+		"duration_minutes",
+		"sections",
+		"learning_intentions",
+		"success_criteria",
+		"curriculum_links"
+	],
+	"properties": {
+		"title": { "type": "string", "minLength": 1 },
+		"description": { "type": "string" },
+		"summary": { "type": "string" },
+		"duration_minutes": { "type": "integer", "minimum": 1 },
+		"sections": {
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"type": "object",
+				"required": ["section", "duration_minutes"],
+				"properties": {
+					"label": { "type": "string" },
+					"section": { "type": "string", "minLength": 1 },
+					"duration_minutes": { "type": "integer", "minimum": 1 },
+					"kind": { "enum": ["instruction", "practice", "discussion", "review"] },
+					"tier": { "enum": ["core", "practice", "stretch"] }
+				}
+			}
+		},
+		"learning_intentions": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+		"success_criteria": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+		"curriculum_links": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": ["framework", "id", "coverage", "mode"],
+				"properties": {
+					"framework": { "type": "string", "minLength": 1 },
+					"id": { "type": "string", "minLength": 1 },
+					"coverage": { "enum": ["full", "partial"] },
+					"mode": { "enum": ["introduced", "developed", "consolidated", "revisited"] },
+					"note": { "type": "string" }
+				}
+			}
+		},
+		"assessment": {
+			"type": "object",
+			"properties": {
+				"formative": { "type": "string" },
+				"evidence": { "type": "array", "items": { "type": "string" } }
+			}
+		},
+		"differentiation": { "type": "object", "additionalProperties": { "type": "string" } },
+		"resources": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": ["name"],
+				"properties": { "name": { "type": "string", "minLength": 1 } }
+			}
+		}
+	}
+}

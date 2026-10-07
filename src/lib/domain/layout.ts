@@ -34,6 +34,22 @@ export function schemaPaths(paths: Iterable<string>): string[] {
 	return found.sort();
 }
 
+/**
+ * Whether a folder can be opened as lesson files: it holds a unit or an
+ * offering, or nothing in subfolders yet (a fresh start). Loose top-level
+ * files, such as a new clone's README, still count as fresh.
+ */
+export function canOpen(paths: Iterable<string>): boolean {
+	let fresh = true;
+	for (const path of paths) {
+		if (/^subjects\/.+\/unit\.json$/.test(path) || /^offerings\/[^/]+\.json$/.test(path)) {
+			return true;
+		}
+		if (path.includes('/')) fresh = false;
+	}
+	return fresh;
+}
+
 /** The nearest `outcome.json` at or above the unit directory, as the renderers find it. */
 export function outcomePath(
 	unitDir: string,

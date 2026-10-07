@@ -60,7 +60,7 @@
 	let from = $state<House>('none');
 
 	afterNavigate(({ from: previous }) => {
-		from = houseOf(previous?.url.searchParams.get('o'), houses);
+		from = houseOf(previous?.url?.searchParams.get('o'), houses);
 		menuOpen = false;
 	});
 

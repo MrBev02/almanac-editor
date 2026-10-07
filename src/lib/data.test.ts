@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Data } from './data.ts';
 import { dump } from './domain/format.ts';
 import { blankLesson } from './domain/newLesson.ts';
+import { blankUnit } from './domain/newUnit.ts';
 import { ConflictError, NotFoundError, type Loaded } from './domain/repo.ts';
 import type { Store } from './domain/store.ts';
 import type { Lesson, Offering, Unit } from './domain/types.ts';
@@ -128,6 +129,47 @@ describe('Data.createLesson', () => {
 			/02_x is saved, but adding it to .*unit\.json failed: Disk full\./
 		);
 		expect(store.files.has(`${UNIT}/lessons/02_x.json`)).toBe(true);
+	});
+});
+
+describe('Data.createUnit', () => {
+	it('starts an empty folder with the starter schemas, then writes the unit', async () => {
+		const store = new MemoryStore(new Map([['README.md', '']]));
+		const data = new Data(store);
+		expect(await data.units()).toEqual([]);
+		await data.createUnit('subjects/dt/units/products', blankUnit('Products', 'D&T', ''));
+		expect(store.writes).toEqual([
+			'schemas/lesson.schema.json',
+			'schemas/offering.schema.json',
+			'schemas/outcome.schema.json',
+			'schemas/unit.schema.json',
+			'subjects/dt/units/products/unit.json'
+		]);
+		expect((await data.units()).map((u) => u.dir)).toEqual(['subjects/dt/units/products']);
+		expect((await data.schemas()).has('lesson.schema.json')).toBe(true);
+	});
+
+	it('checks the first unit against the starter schemas', async () => {
+		const store = new MemoryStore(new Map());
+		const data = new Data(store);
+		await expect(data.createUnit('subjects/dt/units/x', blankUnit('', 'D&T', ''))).rejects.toThrow(
+			'Unit title is empty.'
+		);
+		expect(store.writes).not.toContain('subjects/dt/units/x/unit.json');
+	});
+
+	it('gives files that already have plans no schemas', async () => {
+		const store = new MemoryStore(new Map([['offerings/2030_y8.json', '{}\n']]));
+		await new Data(store).createUnit('subjects/dt/units/x', blankUnit('X', 'D&T', ''));
+		expect(store.writes).toEqual(['subjects/dt/units/x/unit.json']);
+	});
+
+	it('refuses a unit whose file exists', async () => {
+		const { store, data } = setup();
+		await expect(data.createUnit(UNIT, blankUnit('Again', 'S', ''))).rejects.toBeInstanceOf(
+			ConflictError
+		);
+		expect(store.writes).toEqual([]);
 	});
 });
 

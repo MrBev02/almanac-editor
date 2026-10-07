@@ -75,9 +75,10 @@
 	});
 
 	function onkeydown(event: KeyboardEvent) {
-		if (event.key !== 'n' || event.ctrlKey || event.metaKey || event.altKey || !u) return;
+		if (event.ctrlKey || event.metaKey || event.altKey || !u) return;
 		if ((event.target as HTMLElement).closest('input, textarea, select, dialog[open]')) return;
-		goto(links.newLesson(u, o, t));
+		if (event.key === 'n') goto(links.newLesson(u, o, t));
+		else if (event.key === 'e') goto(links.unitEdit(u, o, t));
 	}
 </script>
 
@@ -108,6 +109,9 @@
 						<Icon name="pencil" size={16} /> Edit class
 					</a>
 				{/if}
+				<a class="btn" href={links.unitEdit(u, o, t)} title="Edit unit (E)">
+					<Icon name="pencil" size={16} /> Edit unit
+				</a>
 				<a class="btn solid" href={links.newLesson(u, o, t)} title="New lesson (N)">
 					<Icon name="plus" size={16} /> New lesson
 				</a>
@@ -187,6 +191,11 @@
 								</span>
 							</div>
 						{/if}
+					</li>
+				{:else}
+					<li class="empty">
+						No lesson plans yet. <a href={links.newLesson(u, o, t)}>Write the first one</a>, or
+						press <kbd>N</kbd>.
 					</li>
 				{/each}
 			</ol>
@@ -365,6 +374,11 @@
 
 	.bar {
 		padding: 6px 0;
+	}
+
+	.empty {
+		padding: 18px 4px;
+		color: var(--ink-2);
 	}
 
 	@media (max-width: 720px) {

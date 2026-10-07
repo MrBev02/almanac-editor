@@ -17,15 +17,24 @@ import {
 	type Resolution,
 	type TaughtInput
 } from './domain/deliveries.ts';
-import { contentPath, offeringPaths, oneOffDirs, schemaPaths, unitDirs } from './domain/layout.ts';
+import {
+	contentPath,
+	offeringPaths,
+	oneOffDirs,
+	outcomePath,
+	schemaPaths,
+	unitDirs
+} from './domain/layout.ts';
 import { basename, join, normalise, stem } from './domain/paths.ts';
 import { withColour } from './domain/offeringEdit.ts';
 import { withLesson } from './domain/newLesson.ts';
+import { isFresh, STARTER_SCHEMAS } from './domain/starter.ts';
 import { offeringPath } from './domain/newOffering.ts';
 import { byNumber } from './house.ts';
 import { ConflictError, type Loaded } from './domain/repo.ts';
 import type { Store } from './domain/store.ts';
 import type { Lesson, Offering, Unit } from './domain/types.ts';
+import type { OutcomeSet } from './domain/unitEdit.ts';
 import { describeProblems } from './domain/fieldNames.ts';
 import { Schemas, type Problem } from './domain/validate.ts';
 
@@ -100,6 +109,96 @@ export class Data {
 		await this.store.createJson(path, doc, `Add class ${doc.id}`);
 		this.offeringsPromise = null;
 		return path;
+	}
+
+	/**
+	 * Saves a new unit as `dir/unit.json`. On a fresh start (no units, classes
+	 * or schemas yet) the starter schemas are written first, so this and every
+	 * later save is checked. Throws ConflictError if the unit's file exists,
+	 * and an Error listing the problems if the schema refuses it.
+	 */
+	async createUnit(dir: string, doc: Unit): Promise<void> {
+		if (isFresh((await this.store.paths()).keys())) {
+			for (const [name, schema] of Object.entries(STARTER_SCHEMAS)) {
+				await this.store.createJson(join('schemas', name), schema, `Add starter ${name}`);
+			}
+			this.schemasPromise = null;
+		}
+		await this.check('unit.schema.json', doc);
+		await this.store.createJson(join(dir, 'unit.json'), doc, `Add unit ${basename(dir)}`);
+		this.unitsPromise = null;
+	}
+
+	/** The unit's file as it stands, with its version for a later save. */
+	unitFile(dir: string): Promise<Loaded<Unit>> {
+		return this.store.readJson<Unit>(join(dir, 'unit.json'));
+	}
+
+	/**
+	 * Every dot point id a plan in the unit's directory links, so the editor
+	 * never removes one in use. Reads every plan under the unit, listed or not.
+	 */
+	async linkedIds(dir: string): Promise<Set<string>> {
+		const prefix = dir + '/';
+		const plans = [...(await this.store.paths()).keys()].filter(
+			(p) => p.startsWith(prefix) && p.endsWith('.json') && p !== join(dir, 'unit.json')
+		);
+		const ids = new Set<string>();
+		for (const lesson of await Promise.all(plans.map((p) => this.lesson(p).catch(() => null)))) {
+			for (const link of lesson?.doc.curriculum_links ?? []) ids.add(link.id);
+		}
+		return ids;
+	}
+
+	/**
+	 * Saves a unit's own fields. Throws ConflictError if the file changed
+	 * since it was read, and an Error listing the problems if the schema
+	 * refuses it.
+	 */
+	async saveUnit(dir: string, next: Unit, sha: string, message: string): Promise<string> {
+		await this.check('unit.schema.json', next);
+		const newSha = await this.store.writeJson(join(dir, 'unit.json'), next, sha, message);
+		this.unitsPromise = null;
+		return newSha;
+	}
+
+	/**
+	 * The outcomes that apply to a unit: the nearest `outcome.json` at or
+	 * above it, as the renderers find it, or null where the subject has none.
+	 */
+	async outcomesFor(dir: string): Promise<(Loaded<OutcomeSet> & { path: string }) | null> {
+		const path = outcomePath(dir, await this.store.paths());
+		if (!path) return null;
+		return { path, ...(await this.store.readJson<OutcomeSet>(path)) };
+	}
+
+	/** Every outcome code a unit names, among the units that take their outcomes from `path`. */
+	async usedCodes(path: string): Promise<Set<string>> {
+		const paths = await this.store.paths();
+		const codes = new Set<string>();
+		for (const { dir, unit } of await this.units()) {
+			if (outcomePath(dir, paths) !== path) continue;
+			for (const code of unit.applicable_outcomes ?? []) codes.add(code);
+		}
+		return codes;
+	}
+
+	/**
+	 * Saves a subject's outcomes: over the file read with `sha`, or as a new
+	 * file when `sha` is null. Throws ConflictError if the file changed (or
+	 * appeared) meanwhile, and an Error listing the problems if the schema
+	 * refuses it.
+	 */
+	async saveOutcomes(
+		path: string,
+		next: OutcomeSet,
+		sha: string | null,
+		message: string
+	): Promise<string> {
+		await this.check('outcome.schema.json', next);
+		return sha === null
+			? this.store.createJson(path, next, message)
+			: this.store.writeJson(path, next, sha, message);
 	}
 
 	/**

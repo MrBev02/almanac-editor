@@ -62,7 +62,13 @@ const SCHEMAS: Record<string, Field> = {
 			unit_title: text('Unit title'),
 			subject: text('Subject'),
 			description: text('Unit description'),
-			syllabus_registry: list('Syllabus registry', 'Dot point'),
+			syllabus_registry: list('Syllabus dot points', 'Dot point', {
+				id: text('Id'),
+				framework: text('Framework'),
+				phase: text('Phase'),
+				text: text('Text')
+			}),
+			applicable_outcomes: list('Outcomes', 'Outcome'),
 			lessons: list('The unit’s lesson list', 'Lesson')
 		}
 	},
@@ -95,6 +101,15 @@ const SCHEMAS: Record<string, Field> = {
 				notes: text('Notes')
 			}),
 			differentiation
+		}
+	},
+	'outcome.schema.json': {
+		name: 'The outcomes',
+		fields: {
+			name: text('Course name'),
+			framework: text('Framework'),
+			stage: text('Stage'),
+			outcomes: list('Outcomes', 'Outcome', { code: text('Code'), text: text('Outcome') })
 		}
 	},
 	'delivery.schema.json': {

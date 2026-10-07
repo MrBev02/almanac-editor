@@ -16,6 +16,14 @@ import { fromDraft, toDraft } from './lessonEdit.ts';
 import { fromClassDraft, toClassDraft, withColour } from './offeringEdit.ts';
 import { blankLesson, lessonFile, lessonFolders, withLesson } from './newLesson.ts';
 import { copyOffering } from './newOffering.ts';
+import { STARTER_SCHEMAS } from './starter.ts';
+import {
+	fromOutcomeDraft,
+	fromUnitDraft,
+	toOutcomeDraft,
+	toUnitDraft,
+	type OutcomeSet
+} from './unitEdit.ts';
 import { lessonsForOffering } from './offerings.ts';
 import type { Lesson, Offering, Unit } from './types.ts';
 import { Schemas } from './validate.ts';
@@ -50,8 +58,8 @@ describe.skipIf(!root)('real data repo', () => {
 	);
 
 	it('round-trips every file the editor can write through dump', () => {
-		// outcome.json is hand-formatted, Python does not round-trip it either,
-		// and the editor never writes it.
+		// outcome.json is skipped: one lacks its final newline, which an edit in
+		// the app adds. Its untouched-draft test compares with the house format.
 		const writable = files.filter((f) => !f.endsWith('/outcome.json'));
 		const changed = writable.filter((f) => dump(JSON.parse(read(f))) !== read(f));
 		expect(changed).toEqual([]);
@@ -95,6 +103,40 @@ describe.skipIf(!root)('real data repo', () => {
 			success_criteria: ['I can do a thing.']
 		};
 		expect(schemas.validate('lesson.schema.json', plan)).toEqual([]);
+	});
+
+	it('finds every unit, lesson, class and outcome set valid against the starter schemas', () => {
+		// The starter schemas must never be stricter than a real repo's own.
+		const starter = new Schemas(STARTER_SCHEMAS);
+		const units = files.filter((f) => f.endsWith('/unit.json'));
+		const invalid = [
+			...lessons.map((f) => [f, 'lesson.schema.json'] as const),
+			...units.map((f) => [f, 'unit.schema.json'] as const),
+			...offerings.map((f) => [f, 'offering.schema.json'] as const),
+			...files
+				.filter((f) => f.endsWith('/outcome.json'))
+				.map((f) => [f, 'outcome.schema.json'] as const)
+		]
+			.map(([f, name]) => [f, starter.validate(name, JSON.parse(read(f)))] as const)
+			.filter(([, problems]) => problems.length > 0);
+		expect(invalid).toEqual([]);
+	});
+
+	it('saves every untouched unit and outcome draft as the same bytes', () => {
+		const changed = files.flatMap((f) => {
+			if (f.endsWith('/unit.json')) {
+				const unit: Unit = JSON.parse(read(f));
+				return dump(fromUnitDraft(unit, toUnitDraft(unit), new Set())) === read(f) ? [] : [f];
+			}
+			if (f.endsWith('/outcome.json')) {
+				// Compared with the house format: one outcome.json lacks its final newline.
+				const set: OutcomeSet = JSON.parse(read(f));
+				const house = dump(set);
+				return dump(fromOutcomeDraft(set, toOutcomeDraft(set), new Set())) === house ? [] : [f];
+			}
+			return [];
+		});
+		expect(changed).toEqual([]);
 	});
 
 	it('finds every lesson valid against the repo schema', () => {

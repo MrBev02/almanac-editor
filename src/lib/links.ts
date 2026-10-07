@@ -15,6 +15,11 @@ export const links = {
 	home: () => resolve('/'),
 	settings: () => resolve('/settings'),
 	newClass: (from?: string | null) => resolve('/new-class') + query({ from }),
+	unitEdit: (u: string, o?: string | null, t?: string | null) =>
+		resolve('/unit-edit') + query({ u, o, t }),
+	outcomes: (u: string, o?: string | null, t?: string | null) =>
+		resolve('/outcomes') + query({ u, o, t }),
+	newUnit: (s?: string | null) => resolve('/new-unit') + query({ s }),
 	/** A class's editor; `u` and `t` name the unit page it was opened from, to go back to. */
 	editClass: (o: string, u?: string | null, t?: string | null) =>
 		resolve('/class-edit') + query({ o, u, t }),
