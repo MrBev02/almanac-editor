@@ -29,6 +29,8 @@
 			: null
 	);
 
+	const count = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
 	// Colours fixed since the page loaded, so the bands change without a reload.
 	let chosen = $state<Record<string, string | null>>({});
 </script>
@@ -49,15 +51,17 @@
 		{@const unitOf = (dir: string) => units.find((e) => e.dir === dir)?.unit}
 		<PageHead
 			title={shown === 'all' ? 'Your classes' : `Your classes in ${shown}`}
-			lede="{visible.length} {visible.length === 1 ? 'class' : 'classes'}{shown === 'all'
+			lede="{count(visible.length, 'class', 'classes')}{shown === 'all'
 				? ' across every year'
-				: ''}. {units.length} units and {plans} lesson plans in {session.label}."
+				: ''}. {count(units.length, 'unit')} and {count(plans, 'lesson plan')} in {session.label}."
 		>
 			{#snippet actions()}
 				{#if session.demo}
 					<a class="btn" href={links.settings()}>Use your own lessons</a>
 				{/if}
-				<a class="btn solid" href={links.newClass()}><Icon name="plus" size={16} /> New class</a>
+				{#if units.length}
+					<a class="btn solid" href={links.newClass()}><Icon name="plus" size={16} /> New class</a>
+				{/if}
 			{/snippet}
 			{#if years.length > 1}
 				<nav class="years" aria-label="Year">
@@ -88,8 +92,22 @@
 				</div>
 			{/if}
 
-			{#if offerings.length === 0}
-				<p class="muted">There are no classes in <code>offerings/</code> yet.</p>
+			{#if units.length === 0}
+				<section class="start">
+					<h2>Start with a unit</h2>
+					<p>
+						There are no lesson plans in {session.label} yet. Plans live in units, and a class takes units
+						in the order you teach them. Make a unit, write its first lesson, then make a class that takes
+						it.
+					</p>
+					<a class="btn primary" href={links.newUnit()}>
+						<Icon name="plus" size={16} /> New unit
+					</a>
+				</section>
+			{:else if offerings.length === 0}
+				<p class="muted">
+					No classes yet. <a href={links.newClass()}>Make one</a> to put units in teaching order.
+				</p>
 			{/if}
 
 			<ul class="classes">
@@ -151,10 +169,15 @@
 				{/each}
 			</ul>
 
-			<div class="section-h">
-				<h2>Every unit</h2>
-				<p>Each unit’s full set of plans, in the unit’s own order.</p>
-			</div>
+			{#if units.length}
+				<div class="section-h">
+					<h2>Every unit</h2>
+					<p>
+						Each unit’s full set of plans, in the unit’s own order.
+						<a href={links.newUnit()}>New unit</a>
+					</p>
+				</div>
+			{/if}
 			<div class="subjects">
 				{#each subjects as [subject, list] (subject)}
 					<section>
@@ -209,6 +232,22 @@
 	.years button[aria-pressed='true'] {
 		background: var(--chalk);
 		color: var(--ink);
+	}
+
+	.start {
+		max-width: 620px;
+		padding: 28px 28px 30px;
+		background: var(--paper);
+		box-shadow: var(--shadow);
+	}
+
+	.start h2 {
+		margin: 0 0 8px;
+	}
+
+	.start p {
+		margin: 0 0 20px;
+		color: var(--ink-2);
 	}
 
 	.copy {

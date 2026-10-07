@@ -23,6 +23,8 @@ private.
 - Makes a new class: a copy of an existing one for a new year (units and
   lesson order kept; notes, cohort, dates and Canvas ids reset), or a blank
   one.
+- Makes a new unit, in a subject the files have or a new one. An empty folder
+  starts here.
 - Writes a new lesson plan in a unit (`N` on the unit page): names its file
   after the title, numbered after the last plan in its folder, then opens it
   in the editor. Creating it writes the plan and adds it to the end of the
@@ -56,7 +58,8 @@ schemas/*.schema.json             JSON Schema (draft 2020-12) for the above
 ## Where the lessons live
 
 **A folder on your computer** (Chrome or Edge). Choose the folder that holds
-`subjects/` and `offerings/`. Almanac saves straight into those files and
+`subjects/` and `offerings/`, or an empty folder to start afresh: make a unit,
+write its first lesson, then make a class that takes it. Almanac saves straight into those files and
 touches nothing else. If the folder is a git clone, commit when and how you
 like; Almanac never does it for you. The browser remembers the folder, and may
 ask you to allow access again on a later visit.

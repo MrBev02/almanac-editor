@@ -62,7 +62,7 @@
 	let yearGroup = $state('');
 	let classLabel = $state('');
 	// svelte-ignore state_referenced_locally
-	let subject = $state(offerings[0]?.[1].subject ?? '');
+	let subject = $state(offerings[0]?.[1].subject ?? subjects[0] ?? '');
 	let chosenUnits = $state<string[]>([]);
 	let id = $state('');
 	let idEdited = $state(false);

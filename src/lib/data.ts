@@ -104,6 +104,16 @@ export class Data {
 	}
 
 	/**
+	 * Saves a new unit as `dir/unit.json`. Throws ConflictError if that file
+	 * exists, and an Error listing the problems if the schema refuses it.
+	 */
+	async createUnit(dir: string, doc: Unit): Promise<void> {
+		await this.check('unit.schema.json', doc, 'unit');
+		await this.store.createJson(join(dir, 'unit.json'), doc, `Add unit ${basename(dir)}`);
+		this.unitsPromise = null;
+	}
+
+	/**
 	 * Saves a new plan at `unitDir/ref` and adds it to the unit's index, in
 	 * that order, as two writes. Both files are checked against the schemas
 	 * before either is written. Throws ConflictError if the plan's file

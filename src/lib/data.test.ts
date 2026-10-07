@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Data } from './data.ts';
 import { dump } from './domain/format.ts';
 import { blankLesson } from './domain/newLesson.ts';
+import { blankUnit } from './domain/newUnit.ts';
 import { ConflictError, NotFoundError, type Loaded } from './domain/repo.ts';
 import type { Store } from './domain/store.ts';
 import type { Lesson, Unit } from './domain/types.ts';
@@ -126,5 +127,24 @@ describe('Data.createLesson', () => {
 			/02_x is saved, but adding it to .*unit\.json failed: Disk full\./
 		);
 		expect(store.files.has(`${UNIT}/lessons/02_x.json`)).toBe(true);
+	});
+});
+
+describe('Data.createUnit', () => {
+	it('writes the unit, and the next listing includes it', async () => {
+		const store = new MemoryStore(new Map());
+		const data = new Data(store);
+		expect(await data.units()).toEqual([]);
+		await data.createUnit('subjects/dt/units/products', blankUnit('Products', 'D&T', ''));
+		expect(store.writes).toEqual(['subjects/dt/units/products/unit.json']);
+		expect((await data.units()).map((u) => u.dir)).toEqual(['subjects/dt/units/products']);
+	});
+
+	it('refuses a unit whose file exists', async () => {
+		const { store, data } = setup();
+		await expect(data.createUnit(UNIT, blankUnit('Again', 'S', ''))).rejects.toBeInstanceOf(
+			ConflictError
+		);
+		expect(store.writes).toEqual([]);
 	});
 });

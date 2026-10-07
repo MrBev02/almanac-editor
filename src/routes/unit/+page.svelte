@@ -183,6 +183,11 @@
 							</div>
 						{/if}
 					</li>
+				{:else}
+					<li class="empty">
+						No lesson plans yet. <a href={links.newLesson(u, o, t)}>Write the first one</a>, or
+						press <kbd>N</kbd>.
+					</li>
 				{/each}
 			</ol>
 		</div>
@@ -360,6 +365,11 @@
 
 	.bar {
 		padding: 6px 0;
+	}
+
+	.empty {
+		padding: 18px 4px;
+		color: var(--ink-2);
 	}
 
 	@media (max-width: 720px) {

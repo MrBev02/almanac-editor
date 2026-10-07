@@ -97,7 +97,8 @@
 			{#if !folders}
 				Opening a folder on this computer needs Chrome or Edge.
 			{:else}
-				Your lessons are on GitHub? <a href={links.settings()}>Connect the repo instead</a>.
+				No lessons yet? Open an empty folder and start there. Your lessons are on GitHub?
+				<a href={links.settings()}>Connect the repo instead</a>.
 				{#if session.waiting}<button class="link" onclick={tryIt}
 						>Or look at the sample lessons</button
 					>.{/if}
