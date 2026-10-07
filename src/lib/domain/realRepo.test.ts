@@ -14,7 +14,7 @@ import { dump } from './format.ts';
 import { unitDirs } from './layout.ts';
 import { fromDraft, toDraft } from './lessonEdit.ts';
 import { withColour } from './offeringEdit.ts';
-import { blankLesson, lessonFile, lessonFolders, nextNumber, withLesson } from './newLesson.ts';
+import { blankLesson, lessonFile, lessonFolders, withLesson } from './newLesson.ts';
 import { copyOffering } from './newOffering.ts';
 import { lessonsForOffering } from './offerings.ts';
 import type { Lesson, Offering, Unit } from './types.ts';
@@ -71,7 +71,7 @@ describe.skipIf(!root)('real data repo', () => {
 			const dir = f.slice(0, -'/unit.json'.length);
 			const unit: Unit = JSON.parse(read(f));
 			return lessonFolders(unit).flatMap((folder) => {
-				const ref = lessonFile(folder, nextNumber(dir, unit, folder, files), 'new_plan');
+				const ref = lessonFile(folder, 'new_plan');
 				const before = read(f).split('\n');
 				const after = dump(withLesson(unit, ref)).split('\n');
 				const added = after.filter((line) => !before.includes(line));

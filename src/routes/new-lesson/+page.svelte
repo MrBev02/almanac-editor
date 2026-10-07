@@ -12,7 +12,7 @@
 		lessonFolders,
 		lessonFile,
 		lessonSlug,
-		nextNumber,
+		numbered,
 		ownLists,
 		usualLength,
 		validSlug
@@ -79,16 +79,17 @@
 		<div class="page"><div class="loading"><span></span><span></span><span></span></div></div>
 	{:then { data, unit, paths, schemas, folders, own, start, minutes }}
 		{@const where = folder ?? start}
-		{@const number = nextNumber(u, unit, where, paths.keys())}
-		{@const ref = lessonFile(where, number, slug || '…')}
+		{@const ref = lessonFile(where, slug || '…')}
 		{@const taken = paths.has(join(u, ref))}
 		{@const slugProblem = !slug
 			? 'Give the lesson a title.'
 			: !validSlug(slug)
 				? 'Use lowercase words and numbers joined by underscores.'
-				: taken
-					? `${ref} already exists.`
-					: null}
+				: numbered(slug)
+					? 'Start with a word, not a number. The unit’s lesson list and each class set the order.'
+					: taken
+						? `${ref} already exists.`
+						: null}
 		{@const unitHref = links.unit(u, o, t)}
 		<PageHead
 			crumbs={[{ href: unitHref, label: unit.unit_title }]}
@@ -130,7 +131,7 @@
 						event.preventDefault();
 						if (slugProblem) return;
 						chosen = {
-							ref: lessonFile(where, number, slug),
+							ref: lessonFile(where, slug),
 							lesson: blankLesson(title.trim(), minutes)
 						};
 					}}
@@ -153,7 +154,6 @@
 					<label class="field">
 						<span>File name</span>
 						<span class="name">
-							<span class="fixed">{number}_</span>
 							<input
 								type="text"
 								bind:value={slug}

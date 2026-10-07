@@ -39,7 +39,7 @@ src/lib/domain/   plain TypeScript, no Svelte, unit-tested
   deliveries.ts   delivery records: what a class was taught, and its feedback
   offeringEdit.ts withColour(): the one field the editor changes on an offering
   newOffering.ts  copyOffering / blankOffering: a new class, and its id and path
-  newLesson.ts    a new plan: its file name and number, and the unit's index
+  newLesson.ts    a new plan: its file name, and the unit's index
   layout.ts       where units, offerings, schemas and content files are
   validate.ts     the data repo's own schemas/*.schema.json, at run time
 src/lib/data.ts   per-sign-in cache over Repo

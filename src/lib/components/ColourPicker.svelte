@@ -36,7 +36,7 @@
 			error =
 				e instanceof ConflictError
 					? 'This class’s file changed since the page loaded. Reload the page and try again.'
-					: /colour|additional/i.test((e as Error).message)
+					: /Colour is not a field/.test((e as Error).message)
 						? 'Your offering schema does not allow colour yet. Add it to schemas/offering.schema.json.'
 						: `Not saved. ${(e as Error).message}`;
 		} finally {

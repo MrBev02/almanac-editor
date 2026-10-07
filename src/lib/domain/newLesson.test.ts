@@ -5,7 +5,7 @@ import {
 	lessonFolders,
 	lessonFile,
 	lessonSlug,
-	nextNumber,
+	numbered,
 	ownLists,
 	usualLength,
 	validSlug,
@@ -65,42 +65,18 @@ describe('lessonFolders', () => {
 	});
 });
 
-describe('nextNumber', () => {
-	it('is one more than the highest number in the folder', () => {
-		const u = unit(['lessons/01_socks.json', 'lessons/03_hats.json']);
-		expect(nextNumber(UNIT, u, 'lessons', [])).toBe('04');
-	});
-
-	it('counts files the index does not list', () => {
-		const u = unit(['lessons/01_socks.json']);
-		const paths = [
-			`${UNIT}/lessons/01_socks.json`,
-			`${UNIT}/lessons/07_spare.json`,
-			`${UNIT}/lessons/07_spare.md`
-		];
-		expect(nextNumber(UNIT, u, 'lessons', paths)).toBe('08');
-	});
-
-	it('counts only the chosen folder, not its neighbours or subfolders', () => {
-		const u = unit(['lessons/2026_y9/12_a.json', 'lessons/2026_y10/03_a.json']);
-		const paths = [`${UNIT}/lessons/2026_y10/old/40_x.json`, `${UNIT}/lessons/2026_y9/12_a.json`];
-		expect(nextNumber(UNIT, u, 'lessons/2026_y10', paths)).toBe('04');
-	});
-
-	it('keeps a wider width when the folder uses one', () => {
-		expect(nextNumber(UNIT, unit(['lessons/009_a.json']), 'lessons', [])).toBe('010');
-	});
-
-	it('starts at 01', () => {
-		expect(nextNumber(UNIT, unit(), 'lessons', [])).toBe('01');
+describe('lessonFile', () => {
+	it('joins folder and slug, with no number', () => {
+		expect(lessonFile('lessons/2026_y9', 'sorting_hats')).toBe('lessons/2026_y9/sorting_hats.json');
 	});
 });
 
-describe('lessonFile', () => {
-	it('joins folder, number and slug', () => {
-		expect(lessonFile('lessons/2026_y9', '07', 'sorting_hats')).toBe(
-			'lessons/2026_y9/07_sorting_hats.json'
-		);
+describe('numbered', () => {
+	it('spots a name that starts with a number, as older plans do', () => {
+		expect(numbered('07_sorting_hats')).toBe(true);
+		expect(numbered('3_ways_to_sort')).toBe(true);
+		expect(numbered('2nd_go')).toBe(false);
+		expect(numbered('sorting_hats')).toBe(false);
 	});
 });
 
