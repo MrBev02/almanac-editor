@@ -2,8 +2,8 @@ import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 
-// Served from a sub-path on github.io (`/almanac-editor`) until the app has
-// its own domain; set BASE_PATH='' in the deploy workflow once it does.
+// Served from the root of almanac-editor.github.io. Set BASE_PATH to serve it
+// from a sub-path instead, as a project Pages site would need.
 const base = process.env.BASE_PATH ?? '';
 
 export default defineConfig({
