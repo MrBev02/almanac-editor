@@ -91,7 +91,9 @@ describe('Data.createLesson', () => {
 	it('writes nothing when the schema refuses the plan', async () => {
 		const { store, data } = setup();
 		const bad = blankLesson('Sorting hats', 50);
-		await expect(data.createLesson(UNIT, 'lessons/02_x.json', bad)).rejects.toThrow(/section/);
+		await expect(data.createLesson(UNIT, 'lessons/02_x.json', bad)).rejects.toThrow(
+			'Section 1, What happens is empty.'
+		);
 		expect(store.writes).toEqual([]);
 	});
 

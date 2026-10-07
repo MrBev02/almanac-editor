@@ -7,6 +7,7 @@ import { join, normalise, stem } from './paths.ts';
 import { decodeBase64, encodeBase64 } from './repo.ts';
 import type { Offering, Unit } from './types.ts';
 import { Schemas, toPath } from './validate.ts';
+import { describeProblems, fieldName } from './fieldNames.ts';
 
 const fixture = <T>(name: string): T =>
 	JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf-8'));
@@ -136,8 +137,61 @@ describe('Schemas', () => {
 		expect(problems.map((p) => p.path)).toEqual(['differentiation.support']);
 	});
 
+	it('says what is wrong in plain words', () => {
+		const problems = schemas.validate('lesson.schema.json', {
+			title: 'A',
+			duration_minutes: 0,
+			sections: [{ section: '', duration_minutes: '5' }]
+		});
+		expect(problems).toEqual(
+			expect.arrayContaining([
+				{ path: 'duration_minutes', message: 'must be at least 1' },
+				{ path: 'sections[0].section', message: 'is empty' },
+				{ path: 'sections[0].duration_minutes', message: 'must be a whole number' }
+			])
+		);
+	});
+
+	it('reports a missing field where the field belongs', () => {
+		const problems = schemas.validate('lesson.schema.json', { title: 'A', duration_minutes: 5 });
+		expect(problems).toEqual([{ path: 'sections', message: 'is missing' }]);
+	});
+
 	it('turns pointers into paths', () => {
 		expect(toPath('#/sections/2/duration_minutes')).toBe('sections[2].duration_minutes');
 		expect(toPath('#')).toBe('');
+	});
+});
+
+describe('fieldName', () => {
+	const lesson = (path: string) => fieldName('lesson.schema.json', path);
+
+	it('names a path as the editor labels it', () => {
+		expect(lesson('sections[0].section')).toBe('Section 1, What happens');
+		expect(lesson('duration_minutes')).toBe('Lesson length');
+		expect(lesson('assessment.evidence[1]')).toBe('Assessment, Evidence 2');
+		expect(lesson('differentiation.eald')).toBe('Differentiation, EAL/D');
+		expect(lesson('learning_intentions[2]')).toBe('Learning intention 3');
+		expect(lesson('')).toBe('The plan');
+		expect(lesson('extra')).toBe('extra');
+	});
+
+	it('names paths in classes and records', () => {
+		expect(fieldName('offering.schema.json', 'units[1].lessons[0]')).toBe('Unit 2, Lesson 1');
+		expect(fieldName('offering.schema.json', 'differentiation.support')).toBe(
+			'Differentiation, Support'
+		);
+		expect(fieldName('delivery.schema.json', 'deliveries[0].feedback[2].issue')).toBe(
+			'Lesson taught 1, Feedback item 3, What happened'
+		);
+		expect(fieldName('delivery.schema.json', 'deliveries[0].plan.sections[1].section')).toBe(
+			'Lesson taught 1, Plan, Section 2, What happens'
+		);
+	});
+
+	it('writes problems as sentences', () => {
+		expect(
+			describeProblems('offering.schema.json', [{ path: 'id', message: 'is missing' }])
+		).toEqual(['Id is missing.']);
 	});
 });

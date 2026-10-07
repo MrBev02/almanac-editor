@@ -16,6 +16,7 @@ const BASE = 'https://schemas.almanac.invalid/';
 export interface Problem {
 	/** Where in the document, as a dotted path: `sections[2].duration_minutes`. Empty for the whole file. */
 	path: string;
+	/** What is wrong, in plain words, to follow the field's name: "is empty". */
 	message: string;
 }
 
@@ -68,9 +69,13 @@ const WRAPPERS = new Set([
 	'contains'
 ]);
 
-function leafErrors(
-	errors: { keyword: string; instanceLocation: string; error: string }[]
-): Problem[] {
+interface SchemaError {
+	keyword: string;
+	instanceLocation: string;
+	error: string;
+}
+
+function leafErrors(errors: SchemaError[]): Problem[] {
 	const seen = new Set<string>();
 	const problems: Problem[] = [];
 	const add = (path: string, message: string) => {
@@ -81,7 +86,12 @@ function leafErrors(
 	};
 	for (const e of errors) {
 		if (WRAPPERS.has(e.keyword) || e.keyword === 'false') continue;
-		add(toPath(e.instanceLocation), e.error);
+		// A missing field is reported where the field would be, not on its parent.
+		const missing = e.keyword === 'required' ? /"(.*)"/.exec(e.error)?.[1] : undefined;
+		const pointer = missing
+			? `${e.instanceLocation.replace(/\/$/, '')}/${encodeURIComponent(missing)}`
+			: e.instanceLocation;
+		add(toPath(pointer), plain(e));
 	}
 	// `additionalProperties: false` also fails a known property whose value is
 	// invalid, so "not allowed" is only reported where nothing else explains it.
@@ -89,18 +99,67 @@ function leafErrors(
 	for (const e of errors) {
 		if (e.keyword !== 'false') continue;
 		const path = toPath(e.instanceLocation);
-		if (!explained.has(path)) add(path, `${lastKey(e.instanceLocation)} is not an allowed field`);
+		if (!explained.has(path)) add(path, 'is not a field this file can have');
 	}
 	// A `not` failure has no leaf beneath it; keep it rather than report nothing.
 	if (problems.length === 0) {
-		for (const e of errors) problems.push({ path: toPath(e.instanceLocation), message: e.error });
+		for (const e of errors) problems.push({ path: toPath(e.instanceLocation), message: plain(e) });
 	}
 	return problems;
 }
 
-function lastKey(pointer: string): string {
-	const parts = pointer.split('/');
-	return decodeURIComponent(parts[parts.length - 1] ?? '');
+const TYPES: Record<string, string> = {
+	string: 'text',
+	integer: 'a whole number',
+	number: 'a number',
+	boolean: 'yes or no',
+	array: 'a list',
+	object: 'a group of fields',
+	null: 'empty'
+};
+
+/**
+ * The validator's message, reworded for a teacher. The validator's own words
+ * ("String is too short (0 < 1)") name JSON, not the form, so each keyword the
+ * schemas use gets a sentence; anything else keeps the validator's message.
+ */
+function plain(e: SchemaError): string {
+	const numbers = [...e.error.matchAll(/-?\d+(?:\.\d+)?/g)].map((m) => Number(m[0]));
+	const limit = numbers[numbers.length - 1];
+	switch (e.keyword) {
+		case 'required':
+			return 'is missing';
+		case 'minLength':
+			return limit === 1 ? 'is empty' : `needs at least ${limit} characters`;
+		case 'maxLength':
+			return `is too long (at most ${limit} characters)`;
+		case 'minItems':
+			return limit === 1 ? 'needs at least one entry' : `needs at least ${limit} entries`;
+		case 'maxItems':
+			return `has too many entries (at most ${limit})`;
+		case 'minimum':
+			return `must be at least ${limit}`;
+		case 'exclusiveMinimum':
+			return `must be more than ${limit}`;
+		case 'maximum':
+			return `must be at most ${limit}`;
+		case 'exclusiveMaximum':
+			return `must be less than ${limit}`;
+		case 'type': {
+			const expected = [...e.error.matchAll(/"(\w+)"/g)].slice(1).map((m) => TYPES[m[1]!] ?? m[1]);
+			return expected.length ? `must be ${expected.join(' or ')}` : e.error;
+		}
+		case 'enum':
+		case 'const':
+			return 'is not one of the allowed choices';
+		case 'pattern':
+		case 'format':
+			return 'is not in the expected form';
+		case 'uniqueItems':
+			return 'has the same entry twice';
+		default:
+			return e.error;
+	}
 }
 
 /** `#/sections/2/duration_minutes` -> `sections[2].duration_minutes` */
