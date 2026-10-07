@@ -16,6 +16,7 @@ import { fromDraft, toDraft } from './lessonEdit.ts';
 import { withColour } from './offeringEdit.ts';
 import { blankLesson, lessonFile, lessonFolders, nextNumber, withLesson } from './newLesson.ts';
 import { copyOffering } from './newOffering.ts';
+import { STARTER_SCHEMAS } from './starter.ts';
 import { lessonsForOffering } from './offerings.ts';
 import type { Lesson, Offering, Unit } from './types.ts';
 import { Schemas } from './validate.ts';
@@ -95,6 +96,20 @@ describe.skipIf(!root)('real data repo', () => {
 			success_criteria: ['I can do a thing.']
 		};
 		expect(schemas.validate('lesson.schema.json', plan)).toEqual([]);
+	});
+
+	it('finds every unit, lesson and class valid against the starter schemas', () => {
+		// The starter schemas must never be stricter than a real repo's own.
+		const starter = new Schemas(STARTER_SCHEMAS);
+		const units = files.filter((f) => f.endsWith('/unit.json'));
+		const invalid = [
+			...lessons.map((f) => [f, 'lesson.schema.json'] as const),
+			...units.map((f) => [f, 'unit.schema.json'] as const),
+			...offerings.map((f) => [f, 'offering.schema.json'] as const)
+		]
+			.map(([f, name]) => [f, starter.validate(name, JSON.parse(read(f)))] as const)
+			.filter(([, problems]) => problems.length > 0);
+		expect(invalid).toEqual([]);
 	});
 
 	it('finds every lesson valid against the repo schema', () => {

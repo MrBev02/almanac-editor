@@ -131,13 +131,34 @@ describe('Data.createLesson', () => {
 });
 
 describe('Data.createUnit', () => {
-	it('writes the unit, and the next listing includes it', async () => {
-		const store = new MemoryStore(new Map());
+	it('starts an empty folder with the starter schemas, then writes the unit', async () => {
+		const store = new MemoryStore(new Map([['README.md', '']]));
 		const data = new Data(store);
 		expect(await data.units()).toEqual([]);
 		await data.createUnit('subjects/dt/units/products', blankUnit('Products', 'D&T', ''));
-		expect(store.writes).toEqual(['subjects/dt/units/products/unit.json']);
+		expect(store.writes).toEqual([
+			'schemas/lesson.schema.json',
+			'schemas/offering.schema.json',
+			'schemas/unit.schema.json',
+			'subjects/dt/units/products/unit.json'
+		]);
 		expect((await data.units()).map((u) => u.dir)).toEqual(['subjects/dt/units/products']);
+		expect((await data.schemas()).has('lesson.schema.json')).toBe(true);
+	});
+
+	it('checks the first unit against the starter schemas', async () => {
+		const store = new MemoryStore(new Map());
+		const data = new Data(store);
+		await expect(data.createUnit('subjects/dt/units/x', blankUnit('', 'D&T', ''))).rejects.toThrow(
+			/unit_title/
+		);
+		expect(store.writes).not.toContain('subjects/dt/units/x/unit.json');
+	});
+
+	it('gives files that already have plans no schemas', async () => {
+		const store = new MemoryStore(new Map([['offerings/2030_y8.json', '{}\n']]));
+		await new Data(store).createUnit('subjects/dt/units/x', blankUnit('X', 'D&T', ''));
+		expect(store.writes).toEqual(['subjects/dt/units/x/unit.json']);
 	});
 
 	it('refuses a unit whose file exists', async () => {
