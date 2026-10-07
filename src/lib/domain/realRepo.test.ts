@@ -13,7 +13,7 @@ import { feedbackEntries, lessonRef, recordPaths, type DeliveryRecord } from './
 import { dump } from './format.ts';
 import { unitDirs } from './layout.ts';
 import { fromDraft, toDraft } from './lessonEdit.ts';
-import { withColour } from './offeringEdit.ts';
+import { fromClassDraft, toClassDraft, withColour } from './offeringEdit.ts';
 import { blankLesson, lessonFile, lessonFolders, withLesson } from './newLesson.ts';
 import { copyOffering } from './newOffering.ts';
 import { lessonsForOffering } from './offerings.ts';
@@ -163,6 +163,14 @@ print(json.dumps(out))
 			];
 		});
 		expect(problems).toEqual([]);
+	});
+
+	it('saves every offering untouched in the class editor byte for byte', () => {
+		const changed = offerings.filter((f) => {
+			const original: Offering = JSON.parse(read(f));
+			return dump(fromClassDraft(original, toClassDraft(original))) !== read(f);
+		});
+		expect(changed).toEqual([]);
 	});
 
 	it('copies every offering to next year as a valid file', () => {

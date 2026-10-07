@@ -66,8 +66,8 @@ available, never required.
 - Generic: owner, repo and branch come from Settings.
 - New lesson plans are written in the app; existing files are never
   renumbered, because offerings and delivery records name them by path.
-- Decided but not built: offering editing, drag-and-drop,
-  offline queueing, deck preview, GitHub App sign-in, custom domain.
+- Decided but not built: drag-and-drop, offline queueing, deck preview,
+  GitHub App sign-in, custom domain.
 
 ## Brand Commitments
 

@@ -17,7 +17,7 @@ import {
 	type Resolution,
 	type TaughtInput
 } from './domain/deliveries.ts';
-import { contentPath, offeringPaths, schemaPaths, unitDirs } from './domain/layout.ts';
+import { contentPath, offeringPaths, oneOffDirs, schemaPaths, unitDirs } from './domain/layout.ts';
 import { basename, join, normalise, stem } from './domain/paths.ts';
 import { withColour } from './domain/offeringEdit.ts';
 import { withLesson } from './domain/newLesson.ts';
@@ -157,6 +157,26 @@ export class Data {
 		this.offeringsPromise = Promise.resolve(
 			list.map(([p, o]) => [p, p === path ? next : o] as [string, Offering])
 		);
+	}
+
+	/**
+	 * Saves an edited class over the version `sha` names and returns the new
+	 * version id. Throws ConflictError if the file changed since it was read,
+	 * and an Error listing the problems if the schema refuses it.
+	 */
+	async saveOffering(path: string, doc: Offering, sha: string, message: string): Promise<string> {
+		await this.check('offering.schema.json', doc);
+		const next = await this.store.writeJson(path, doc, sha, message);
+		const list = await this.offerings();
+		this.offeringsPromise = Promise.resolve(
+			list.map(([p, o]) => [p, p === path ? doc : o] as [string, Offering])
+		);
+		return next;
+	}
+
+	/** The subject's one-off lessons, as `one_offs/<name>` relative to the subject. */
+	async oneOffs(subject: string): Promise<string[]> {
+		return oneOffDirs((await this.store.paths()).keys(), subject);
 	}
 
 	lesson(path: string): Promise<Loaded<Lesson>> {

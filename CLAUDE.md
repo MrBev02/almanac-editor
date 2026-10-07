@@ -37,7 +37,7 @@ src/lib/domain/   plain TypeScript, no Svelte, unit-tested
   lessonEdit.ts   toDraft / fromDraft: editing without disturbing the file
   offerings.ts    port of the data repo's scripts/offering_lessons.py
   deliveries.ts   delivery records: what a class was taught, and its feedback
-  offeringEdit.ts withColour(): the one field the editor changes on an offering
+  offeringEdit.ts withColour(), and the class editor's toClassDraft / fromClassDraft
   newOffering.ts  copyOffering / blankOffering: a new class, and its id and path
   newLesson.ts    a new plan: its file name, and the unit's index
   layout.ts       where units, offerings, schemas and content files are
@@ -64,7 +64,9 @@ src/lib/components/, src/routes/   UI
     `offerings.ts` or `deliveries.ts`.
 - **The editor never touches** a plan's `materials` (derived; the data repo's
   `materials.yml` Action regenerates it), curriculum link
-  id/coverage/mode/framework, or a resource's url/canvas/file.
+  id/coverage/mode/framework, or a resource's url/canvas/file. On an offering
+  it never touches `canvas`, `differentiation` or the class's name; `colour`
+  changes only through the home page's picker.
 - **Validation uses the data repo's schemas** when the files include
   `schemas/` (a folder without them saves unchecked), read at run time, through
   `@cfworker/json-schema`. Not Ajv: Ajv compiles with `new Function`, which the
@@ -97,8 +99,6 @@ src/lib/components/, src/routes/   UI
 
 These were agreed in planning, each to become an issue:
 
-- offering editing: reorder, add and remove lessons per unit entry, plus term,
-  weeks and notes
 - drag-and-drop
 - offline editing: an installable app with commits queued until back online
 - a Pyodide test: can the data repo's Python run in the browser and replace the

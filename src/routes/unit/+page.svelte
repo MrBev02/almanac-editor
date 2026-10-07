@@ -103,6 +103,11 @@
 			lede={unit.description}
 		>
 			{#snippet actions()}
+				{#if o}
+					<a class="btn" href={links.editClass(o, u, t)}>
+						<Icon name="pencil" size={16} /> Edit class
+					</a>
+				{/if}
 				<a class="btn solid" href={links.newLesson(u, o, t)} title="New lesson (N)">
 					<Icon name="plus" size={16} /> New lesson
 				</a>
