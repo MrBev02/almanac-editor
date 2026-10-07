@@ -9,9 +9,11 @@ which is the wrong place.
 ## Shape
 
 - **Two repos.** This one is public and holds app code only. The data repo is
-  private and holds everything else. Never commit units, lessons, offerings or
-  schemas from a data repo here, not even as test fixtures. Fixtures in
-  `src/lib/domain/fixtures/` are made up.
+  private and holds the lesson content: units, lessons, offerings and delivery
+  records. That content is typically the school's intellectual property. Never
+  commit any of it here, not even as test fixtures or examples. Fixtures in
+  `src/lib/domain/fixtures/` and the sample in `demo.ts` are made up. The
+  starter schemas in `src/lib/domain/starter/` are Almanac's own and generic.
 - **The files are the database.** The teacher chooses where they live:
   - a folder on their computer, through the File System Access API (Chrome and
     Edge). A save writes the file and nothing else; git is optional and is the
@@ -40,8 +42,10 @@ src/lib/domain/   plain TypeScript, no Svelte, unit-tested
   offeringEdit.ts withColour(): the one field the editor changes on an offering
   newOffering.ts  copyOffering / blankOffering: a new class, and its id and path
   newLesson.ts    a new plan: its file name and number, and the unit's index
+  newUnit.ts      a new unit, and a new subject: where they go, what they hold
   layout.ts       where units, offerings, schemas and content files are
   validate.ts     the data repo's own schemas/*.schema.json, at run time
+  starter.ts      starter schemas, written into a folder that starts empty
 src/lib/data.ts   per-sign-in cache over Repo
 src/lib/session.svelte.ts   token and target, or the sample repo
 src/lib/folderAccess.ts   choosing a folder, remembering it in IndexedDB
@@ -63,12 +67,15 @@ src/lib/components/, src/routes/   UI
     Run it after any change to `format.ts`, `lessonEdit.ts`, `offeringEdit.ts`,
     `offerings.ts` or `deliveries.ts`.
 - **The editor never touches** a plan's `materials` (derived; the data repo's
-  `materials.yml` Action regenerates it), curriculum link
-  id/coverage/mode/framework, or a resource's url/canvas/file.
-- **Validation uses the data repo's schemas** when the files include
-  `schemas/` (a folder without them saves unchecked), read at run time, through
+  `materials.yml` Action regenerates it), a saved plan's curriculum link
+  id/coverage/mode/framework, or a resource's url/canvas/file. A new plan's
+  links are chosen from the unit's registry before it is first saved.
+- **Validation uses the files' own `schemas/`**, read at run time, through
   `@cfworker/json-schema`. Not Ajv: Ajv compiles with `new Function`, which the
-  CSP blocks. Don't add `'unsafe-eval'`.
+  CSP blocks. Don't add `'unsafe-eval'`. A folder that starts empty gets the
+  starter schemas with its first unit. Files that already hold plans but no
+  `schemas/` save unchecked; the app never adds schemas to them. The starter
+  schemas must never be stricter than a real repo's (a `DATA_REPO` test checks).
 - **Duplicated logic.** `offerings.ts` and `deliveries.ts` duplicate Python in
   the data repo (`offering_lessons.py`, `deliveries.py`). The `DATA_REPO`
   parity tests compare them; keep them passing.

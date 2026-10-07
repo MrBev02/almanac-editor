@@ -5,7 +5,7 @@
 	// last time), a GitHub repo, or a look around the sample lessons.
 	import { goto } from '$app/navigation';
 	import Icon from './Icon.svelte';
-	import { chooseFolder } from '#lib/chooseFolder.ts';
+	import { chooseFolder, startFolder } from '#lib/chooseFolder.ts';
 	import { canOpenFolders } from '#lib/folderAccess.ts';
 	import Lane from './Lane.svelte';
 	import { links } from '#lib/links.ts';
@@ -53,6 +53,14 @@
 		busy = false;
 	}
 
+	async function start() {
+		busy = true;
+		const result = await startFolder();
+		busy = false;
+		if (result === true) await goto(links.newUnit());
+		else problem = result || null;
+	}
+
 	async function reopen() {
 		busy = true;
 		problem = (await session.reopen())
@@ -83,7 +91,10 @@
 					<Icon name="file" size={18} />
 					Open your lessons folder
 				</button>
-				<button onclick={tryIt}>Look around with sample lessons</button>
+				<button onclick={start} disabled={busy}>
+					<Icon name="plus" size={18} />
+					Start a new one
+				</button>
 			{:else}
 				<a class="btn primary" href={links.settings()}>
 					Connect a GitHub repo
@@ -97,10 +108,11 @@
 			{#if !folders}
 				Opening a folder on this computer needs Chrome or Edge.
 			{:else}
-				Your lessons are on GitHub? <a href={links.settings()}>Connect the repo instead</a>.
-				{#if session.waiting}<button class="link" onclick={tryIt}
-						>Or look at the sample lessons</button
-					>.{/if}
+				{#if session.waiting}
+					<button class="link" onclick={start} disabled={busy}>Start a new lessons folder</button>.
+				{/if}
+				Want to look first? <button class="link" onclick={tryIt}>Try the sample lessons</button>.
+				Lessons on GitHub? <a href={links.settings()}>Connect the repo instead</a>.
 			{/if}
 		</p>
 		<ul class="facts">
@@ -111,7 +123,6 @@
 				<strong>Git if you want it.</strong> If the folder is a git clone, commit when you choose. Or
 				let Almanac commit each save to GitHub for you.
 			</li>
-			<li><strong>Byte for byte.</strong> Saved files match what your own scripts write.</li>
 			<li>
 				<strong>Lessons as code.</strong> The same idea as docs-as-code: one source, every output built
 				from it, history in git.

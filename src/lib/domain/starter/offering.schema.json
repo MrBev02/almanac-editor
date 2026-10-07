@@ -1,0 +1,29 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Class",
+	"description": "Almanac's starter schema: the shape every class (offering) needs. Replace or extend it to suit your school.",
+	"type": "object",
+	"required": ["id", "year", "subject", "units"],
+	"properties": {
+		"id": { "type": "string", "pattern": "^[0-9]{4}(-[a-z0-9]+)+$" },
+		"year": { "type": "integer", "minimum": 2000, "maximum": 2100 },
+		"year_group": { "type": "string" },
+		"class_label": { "type": "string" },
+		"colour": { "type": "string" },
+		"subject": { "type": "string", "minLength": 1 },
+		"units": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": ["unit"],
+				"properties": {
+					"unit": { "type": "string", "minLength": 1 },
+					"term": { "type": "string" },
+					"lessons": { "type": "array", "items": { "type": "string", "pattern": "[.]json$" } },
+					"duration_weeks": { "type": "integer", "minimum": 1 },
+					"notes": { "type": "string" }
+				}
+			}
+		}
+	}
+}

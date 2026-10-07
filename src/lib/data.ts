@@ -21,6 +21,7 @@ import { contentPath, offeringPaths, schemaPaths, unitDirs } from './domain/layo
 import { basename, join, normalise, stem } from './domain/paths.ts';
 import { withColour } from './domain/offeringEdit.ts';
 import { withLesson } from './domain/newLesson.ts';
+import { isFresh, STARTER_SCHEMAS } from './domain/starter.ts';
 import { offeringPath } from './domain/newOffering.ts';
 import { byNumber } from './house.ts';
 import { ConflictError, type Loaded } from './domain/repo.ts';
@@ -101,6 +102,24 @@ export class Data {
 		await this.store.createJson(path, doc, `Add class ${doc.id}`);
 		this.offeringsPromise = null;
 		return path;
+	}
+
+	/**
+	 * Saves a new unit as `dir/unit.json`. On a fresh start (no units, classes
+	 * or schemas yet) the starter schemas are written first, so this and every
+	 * later save is checked. Throws ConflictError if the unit's file exists,
+	 * and an Error listing the problems if the schema refuses it.
+	 */
+	async createUnit(dir: string, doc: Unit): Promise<void> {
+		if (isFresh((await this.store.paths()).keys())) {
+			for (const [name, schema] of Object.entries(STARTER_SCHEMAS)) {
+				await this.store.createJson(join('schemas', name), schema, `Add starter ${name}`);
+			}
+			this.schemasPromise = null;
+		}
+		await this.check('unit.schema.json', doc, 'unit');
+		await this.store.createJson(join(dir, 'unit.json'), doc, `Add unit ${basename(dir)}`);
+		this.unitsPromise = null;
 	}
 
 	/**

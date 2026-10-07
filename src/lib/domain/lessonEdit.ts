@@ -121,7 +121,12 @@ export function sectionTotal(draft: Pick<LessonDraft, 'sections'>): number {
 	return draft.sections.reduce((sum, s) => sum + (Number(s.duration_minutes) || 0), 0);
 }
 
-export function fromDraft(original: Lesson, draft: LessonDraft): Lesson {
+/**
+ * `linking` is for a plan with no file yet: its curriculum links are chosen
+ * in the editor, so they are taken from the draft whole. A saved plan's
+ * links keep their framework, id, coverage and mode.
+ */
+export function fromDraft(original: Lesson, draft: LessonDraft, linking = false): Lesson {
 	const out: Record<string, unknown> = { ...original };
 	const set = (key: string, value: unknown, optional: boolean) =>
 		setField(out, original, key, value, optional);
@@ -139,7 +144,9 @@ export function fromDraft(original: Lesson, draft: LessonDraft): Lesson {
 	set('success_criteria', lines(draft.success_criteria), false);
 	set(
 		'curriculum_links',
-		linksFrom(original.curriculum_links ?? [], draft.curriculum_links),
+		linking
+			? draft.curriculum_links.map((d) => newLink(d))
+			: linksFrom(original.curriculum_links ?? [], draft.curriculum_links),
 		false
 	);
 
@@ -203,6 +210,28 @@ function linksFrom(original: CurriculumLink[], drafts: LinkDraft[]): CurriculumL
 		setField(item, original[i], 'note', text(d.note), true);
 		return ordered(item, d.__keys, LINK_ORDER) as unknown as CurriculumLink;
 	});
+}
+
+function newLink(d: LinkDraft): CurriculumLink {
+	const item: Record<string, unknown> = {
+		framework: d.framework,
+		id: d.id,
+		coverage: d.coverage,
+		mode: d.mode
+	};
+	put(item, 'note', text(d.note));
+	return item as unknown as CurriculumLink;
+}
+
+/** A link to a unit's registry entry, as a new plan starts it. */
+export function linkTo(entry: { id: string; framework: string }): LinkDraft {
+	return {
+		framework: entry.framework,
+		id: entry.id,
+		coverage: 'full',
+		mode: 'introduced',
+		note: ''
+	};
 }
 
 function resourcesFrom(original: Resource[], drafts: ResourceDraft[]): Resource[] {

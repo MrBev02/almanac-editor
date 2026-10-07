@@ -23,6 +23,8 @@ private.
 - Makes a new class: a copy of an existing one for a new year (units and
   lesson order kept; notes, cohort, dates and Canvas ids reset), or a blank
   one.
+- Makes a new unit, in a subject the files have or a new one, with its
+  syllabus dot points. An empty folder starts here.
 - Writes a new lesson plan in a unit (`N` on the unit page): names its file
   after the title, numbered after the last plan in its folder, then opens it
   in the editor. Creating it writes the plan and adds it to the end of the
@@ -40,8 +42,9 @@ private.
   If the file changed on GitHub since it was opened, the save is refused rather
   than overwriting the other change.
 
-It never edits the derived `materials` field, curriculum link ids, coverage or
-mode, or a resource's link, Canvas target or file. The data repo regenerates
+It never edits the derived `materials` field, a saved plan's curriculum link
+ids, coverage or mode, or a resource's link, Canvas target or file. A new plan
+links its dot points from the unit's registry before it is first saved. The data repo regenerates
 `materials` itself in a GitHub Action after each push.
 
 ## Data repo layout it expects
@@ -56,7 +59,10 @@ schemas/*.schema.json             JSON Schema (draft 2020-12) for the above
 ## Where the lessons live
 
 **A folder on your computer** (Chrome or Edge). Choose the folder that holds
-`subjects/` and `offerings/`. Almanac saves straight into those files and
+`subjects/` and `offerings/`. To start afresh, "Start a new one" makes an
+`Almanac lessons` folder where you choose; then make a unit, write its first
+lesson, and make a class that takes it. A new folder gets starter schemas in
+`schemas/`, so every save is checked; change them to suit your school. Almanac saves straight into those files and
 touches nothing else. If the folder is a git clone, commit when and how you
 like; Almanac never does it for you. The browser remembers the folder, and may
 ask you to allow access again on a later visit.
