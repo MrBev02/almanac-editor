@@ -123,7 +123,6 @@
 				<strong>Git if you want it.</strong> If the folder is a git clone, commit when you choose. Or
 				let Almanac commit each save to GitHub for you.
 			</li>
-			<li><strong>Byte for byte.</strong> Saved files match what your own scripts write.</li>
 			<li>
 				<strong>Lessons as code.</strong> The same idea as docs-as-code: one source, every output built
 				from it, history in git.
